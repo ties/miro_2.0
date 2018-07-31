@@ -1,0 +1,69 @@
+CREATE TABLE certificate_tree (
+    tree_name text NOT NULL,
+    date timestamp NOT NULL,
+    trust_anchor_name text PRIMARY KEY,
+    UNIQUE (tree_name)
+);
+
+CREATE TABLE resource_certificate (
+    certificate_name text PRIMARY KEY,
+    subject text,
+    serial_nr bigint,
+    issuer text,
+    subject_key_identifier text,
+    authority_key_identifier text,
+    public_key text,
+    isEE boolean,
+    isCA boolean,
+    isRoot boolean,
+    validity_period_start timestamp,
+    validity_period_end timestamp,
+    is_valid boolean,
+    validation_errors text[],
+    validation_warnings text[],
+    prefixes cidr[],
+    asns bigint[],
+    asn_ranges int8range[],
+    manifest text,
+    crl text,
+    parent_certificate text,
+    certificate_tree text NOT NULL
+);
+
+CREATE TABLE roa (
+    roa_name text PRIMARY KEY,
+    asn bigint,
+    validity_period_start timestamp,
+    validity_period_end timestamp,
+    is_valid boolean,
+    validation_errors text[],
+    validation_warnings text[],
+    signing_time timestamp,
+    prefixes text[],
+    parent_certificate text,
+    certificate_tree text NOT NULL
+);
+
+CREATE TABLE manifest (
+    manifest_name text PRIMARY KEY,
+    files text[],
+    validity_period_start timestamp,
+    validity_period_end timestamp,
+    is_valid boolean,
+    validation_errors text[],
+    validation_warnings text[],
+    parent_certificate text,
+    certificate_tree text NOT NULL
+);
+
+CREATE TABLE crl (
+    crl_name text PRIMARY KEY,
+    revoked_objects text[],
+    validity_period_start timestamp,
+    validity_period_end timestamp,
+    is_valid boolean,
+    validation_errors text[],
+    validation_warnings text[],
+    parent_certificate text,
+    certificate_tree text NOT NULL
+);
