@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href={{ url_for('static', filename='webix/webix.css') }} type="text/css" charset="utf-8">
+        <script src={{ url_for('static', filename='webix/webix.js') }} type="text/javascript" charset="utf-8"></script>
+    </head>
+    <body>
+        <script type="text/javascript" charset="utf-8">
+        webix.ui({
+                type:"line",
+                rows: 
+                    [
+                    { template:"Nav Bar", view:"toolbar", id:"navbar_id", 
+                      elements: 
+                            [
+                            { view:"button", value:"Add", width: 70},
+                            { view:"button", value:"Delete", width: 70 }
+                            ] 
+                    },
+                    { template:"Tool Bar", view:"toolbar", id:"toolbar_id", 
+                      elements: 
+                            [
+                            { view:"button", value:"Add", width: 70},
+                            { view:"button", value:"Delete", width: 70 },
+                            { view:"button", value:"Update", width: 70 },
+                            { view:"button", value:"Clear Form", width: 85 } 
+                            ] 
+                    },
+                    { cols: [
+                            { view:"treetable", id:"tree_viewer", select: true, 
+                              columns:[{id:'col', header:'names', template:"{common.treetable()} #value#", fillspace:true} ],
+                              width:300, url:"/api/objects/meta/rc/ripe-ncc-ta.cer",
+                              on: {
+                                  onBeforeOpen: function(id) {
+                                    var item = this.getItem(id);
+                                    if (item.$count === -1)
+                                        this.loadBranch(id, null, "/api/objects/meta/rc/children/" + id);
+                                    },
+                                  onAfterSelect: function(id) {
+                                    var filename = this.getItem(id).value;
+                                    var type = filename.substr(filename.length - 3);
+                                    if (type == 'roa') {
+                                        webix.ajax("/api/objects/roa/"+filename,{
+                                            error:function(text, data, XmlHttpRequest){
+                                                alert(text);
+                                            },
+                                            success:function(text, data, XmlHttpRequest){
+                                                var stuff = data.json();
+                                                $$("roa_properties").setValues(stuff);
+                                                $$("object_properties_layout").showBatch("roa_batch");
+                                            }
+                                        }); 
+                                    }
+                                    if (type == 'cer') {
+                                        webix.ajax("/api/objects/rc/"+filename,{
+                                            error:function(text, data, XmlHttpRequest){
+                                                alert(text);
+                                            },
+                                            success:function(text, data, XmlHttpRequest){
+                                                var stuff = data.json();
+                                                $$("cer_properties").setValues(stuff);
+                                                $$("object_properties_layout").showBatch("cer_batch");
+                                            }
+                                        }); 
+                                    }
+                                    }
+                                  }
+                            },
+                            { view:"resizer" },
+                            { view:"layout", id:"object_properties_layout", visibleBatch: "idle_batch",
+                              rows: 
+                                [
+                                { view:"property", id:"cer_properties", batch:"cer_batch",
+                                  elements:[
+                                           { label:"Resource Certificate", type:"label"},
+                                           { label:"Filename", type:"text", id:"certificate_name"},
+                                           { label:"Subject", type:"text", id:"subject"},
+                                           { label:"Issuer", type:"text", id:"issuer"},
+                                           { label:"Serial Nr.", type:"int", id:"serial_nr"},
+                                           { label:"Subject Key Identifier", type:"text", id:"subject_key_identifier"},
+                                           { label:"Authority Key Identifier", type:"text", id:"authority_key_identifier"},
+                                           { label:"Public Key", type:"text", id:"public_key"},
+                                           { label:"EE Certificate", type:"boolean", id:"isee"},
+                                           { label:"CA Certificate", type:"boolean", id:"isca"},
+                                           { label:"Root Certificate", type:"boolean", id:"isroot"},
+                                           { label:"Validity Period Start", type:"text", id:"validity_period_start"},
+                                           { label:"Validity Period End", type:"text", id:"validity_period_end"},
+                                           { label:"Valid", type:"boolean", id:"is_valid"},
+                                           { label:"Validation Errors", type:"text", id:"validation_errors"},
+                                           { label:"Validation Warnings", type:"text", id:"validation_warnings"},
+                                           ]
+                                },
+                                { view:"property", id:"roa_properties", batch:"roa_batch",
+                                  elements:[
+                                           { label:"ROA", type:"label"},
+                                           { label:"Filename", type:"text", id:"roa_name"},
+                                           { label:"ASN", type:"int", id:"asn"},
+                                           { label:"Validity Period Start", type:"text", id:"validity_period_start"},
+                                           { label:"Validity Period End", type:"text", id:"validity_period_end"},
+                                           { label:"Valid", type:"boolean", id:"is_valid"},
+                                           { label:"Validation Errors", type:"text", id:"validation_errors"},
+                                           { label:"Validation Warnings", type:"text", id:"validation_warnings"},
+                                           { label:"Signing Time", type:"text", id:"signing_time"},
+                                           { label:"Prefixes", type:"text", id:"prefixes"},
+                                           ]
+                                },
+                                { view:"property", id:"idle_properties", batch:"idle_batch",
+                                  elements:[
+                                           { label: "Idle", type:"label" }
+                                           ]    
+                                }
+                                ]
+                            }
+                            ]
+                    }
+                    ]
+        });
+
+        $$("tree_viewer").attachEvent("onAfterSelect",function(id){
+            parentId = this.getItem(id).parent;
+        })
+        $$("tree_viewer").filter("value", "Skoda");
+        </script>
+    </body> 
+</html>
