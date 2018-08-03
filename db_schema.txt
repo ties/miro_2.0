@@ -27,7 +27,10 @@ CREATE TABLE resource_certificate (
     manifest text,
     crl text,
     parent_certificate text,
-    certificate_tree text NOT NULL
+    certificate_tree text NOT NULL,
+    id bigint,
+    parent_id bigint,
+    has_kids boolean
 );
 
 CREATE TABLE roa (
@@ -41,7 +44,9 @@ CREATE TABLE roa (
     signing_time timestamp,
     prefixes text[],
     parent_certificate text,
-    certificate_tree text NOT NULL
+    certificate_tree text NOT NULL,
+    id bigint,
+    parent_id bigint
 );
 
 CREATE TABLE manifest (
@@ -53,7 +58,9 @@ CREATE TABLE manifest (
     validation_errors text[],
     validation_warnings text[],
     parent_certificate text,
-    certificate_tree text NOT NULL
+    certificate_tree text NOT NULL,
+    id bigint,
+    parent_id bigint
 );
 
 CREATE TABLE crl (
@@ -65,5 +72,7 @@ CREATE TABLE crl (
     validation_errors text[],
     validation_warnings text[],
     parent_certificate text,
-    certificate_tree text NOT NULL
+    certificate_tree text NOT NULL,
+    id bigint,
+    parent_id bigint
 );

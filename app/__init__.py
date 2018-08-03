@@ -18,9 +18,43 @@ def create_app(config_name):
 
     @app.route('/')
     def show_index():
-        cert_trees = db_session.query(CertificateTree).filter(CertificateTree.tree_name == "RIPE").all()
+        return render_template('index.html')
+
+
+    @app.route('/api/objects/meta/rc/children/<parent_id>')
+    def get_rc_children_meta(parent_id):
+        rc = db_session.query(ResourceCertificate).filter(ResourceCertificate.parent_id == parent_id).all()
+        roas = db_session.query(Roa).filter(Roa.parent_id == parent_id).all()
+        f = {'parent': parent_id, 'data': []}
+        for c in rc:
+            c = c.asdict()
+            d = {'id': c['id'], 'value': c['certificate_name'], 'webix_kids': c['has_kids'] }
+            f['data'].append(d)
+        for roa in roas:
+            roa = roa.asdict()
+            d = {'id': roa['id'], 'value': roa['roa_name'], 'webix_kids': False }
+            f['data'].append(d)
+        return jsonify(f)
+
+
+    @app.route('/api/objects/meta/rc/<cert_name>')
+    def get_resource_certificate_meta(cert_name):
+        rc = db_session.query(ResourceCertificate).filter(ResourceCertificate.certificate_name == cert_name).first()
+        rc = rc.asdict()
+        d = {'id': rc['id'], 'value': rc['certificate_name'], 'webix_kids': rc['has_kids'] }
+        return jsonify(d)
+
+
+    @app.route('/api/objects/ct/<name>')
+    def get_certificate_tree(name):
+        cert_tree = db_session.query(CertificateTree).filter(CertificateTree.tree_name == name).first()
+        return jsonify(cert_tree.asdict())
+
+
+    @app.route('/api/objects/ct/all')
+    def get_certificate_trees():
+        cert_trees = db_session.query(CertificateTree).all()
         return jsonify([r.asdict() for r in cert_trees])
-        #return render_template('index.html')
 
     @app.route('/api/objects/rc/<cert_name>')
     def get_resource_certificate(cert_name):
@@ -35,6 +69,11 @@ def create_app(config_name):
     @app.route('/api/objects/crl/<crl_name>')
     def get_crl(crl_name):
         rc = db_session.query(Crl).filter(Crl.crl_name == crl_name).first()
+        return jsonify(rc.asdict())
+
+    @app.route('/api/objects/roa/<roa_name>')
+    def get_roa(roa_name):
+        rc = db_session.query(Roa).filter(Roa.roa_name == roa_name).first()
         return jsonify(rc.asdict())
 
     @app.teardown_appcontext
