@@ -6,6 +6,79 @@
     </head>
     <body>
         <script type="text/javascript" charset="utf-8">
+        function loadSelectedObjects(stub_object) {
+           var type = stub_object['filename'].substr(stub_object['filename'].length - 3);
+           if (type == 'roa') {
+               webix.ajax("/api/objects/roa/"+stub_object['filename'],{
+                   error:function(text, data, XmlHttpRequest){
+                       alert(text);
+                   },
+                   success:function(text, data, XmlHttpRequest){
+                       var stuff = data.json();
+                       $$("roa_properties").setValues(stuff);
+                       $$("object_properties_layout").showBatch("roa_batch");
+                   }
+               }); 
+           }
+           if (type == 'cer') {
+               var mft_filename = stub_object['mft_name'];
+               var crl_filename = stub_object['filename'].substr(0,stub_object['filename'].length -3)+ "crl";
+               webix.ajax("/api/objects/rc/"+ stub_object['filename'],{
+                   error:function(text, data, XmlHttpRequest){
+                       alert(text);
+                   },
+                   success:function(text, data, XmlHttpRequest){
+                      var stuff = data.json();
+                      stuff['width'] = 500;
+                      var resource_list = $$("cer_resource_list");
+                      resource_list.clearAll();
+                      var index = 0;
+                      if (stuff['asn_ranges'] != "None") {
+                        stuff['asn_ranges'].forEach(function(range) {
+                          resource_list.add({id:index, resource: "AS" + range['lower'] + " - AS" + range['upper']});
+                          index++;
+                        });
+                      }
+
+                      if (stuff['asns'] != "None") {
+                        stuff['asns'].forEach(function(asn) {
+                          resource_list.add({id:index, resource: "AS"+asn});
+                          index++;
+                        });
+                      }
+
+                      stuff['prefixes'].forEach(function(prefix) {
+                        resource_list.add({id:index, resource: prefix});
+                        index++;
+                      });
+
+
+                      $$("cer_properties").setValues(stuff);
+                      $$("object_properties_layout").showBatch("cer_batch");
+                   }
+               }); 
+               webix.ajax("/api/objects/mft/"+mft_filename,{
+                   error:function(text, data, XmlHttpRequest){
+                       alert(text);
+                   },
+                   success:function(text, data, XmlHttpRequest){
+                       var stuff = data.json();
+                       $$("mft_properties").setValues(stuff);
+                   }
+               }); 
+               webix.ajax("/api/objects/crl/"+crl_filename,{
+                   error:function(text, data, XmlHttpRequest){
+                       alert(text);
+                   },
+                   success:function(text, data, XmlHttpRequest){
+                       var stuff = data.json();
+                       $$("crl_properties").setValues(stuff);
+                   }
+               }); 
+           }
+           
+        }
+        
         webix.ui({
                 type:"line",
                 rows: 
@@ -20,79 +93,116 @@
                     { template:"Tool Bar", view:"toolbar", id:"toolbar_id", 
                       elements: 
                             [
-                            { view:"button", value:"Add", width: 70},
-                            { view:"button", value:"Delete", width: 70 },
-                            { view:"button", value:"Update", width: 70 },
-                            { view:"button", value:"Clear Form", width: 85 } 
+                            { view:"button", value:"Filter", width: 70,
+                              click:function(){
+                                $$("filter_window").show();
+                              }},
+                            { view:"button", value:"Clear Filter", width: 70},
                             ] 
                     },
                     { cols: [
-                            { view:"treetable", id:"tree_viewer", select: true, 
-                              columns:[{id:'col', header:'names', template:"{common.treetable()} #value#", fillspace:true} ],
-                              width:300, url:"/api/objects/meta/rc/ripe-ncc-ta.cer",
-                              on: {
-                                  onBeforeOpen: function(id) {
-                                    var item = this.getItem(id);
-                                    if (item.$count === -1)
-                                        this.loadBranch(id, null, "/api/objects/meta/rc/children/" + id);
-                                    },
-                                  onAfterSelect: function(id) {
-                                    var filename = this.getItem(id).value;
-                                    var type = filename.substr(filename.length - 3);
-                                    if (type == 'roa') {
-                                        webix.ajax("/api/objects/roa/"+filename,{
-                                            error:function(text, data, XmlHttpRequest){
-                                                alert(text);
-                                            },
-                                            success:function(text, data, XmlHttpRequest){
-                                                var stuff = data.json();
-                                                $$("roa_properties").setValues(stuff);
-                                                $$("object_properties_layout").showBatch("roa_batch");
-                                            }
-                                        }); 
-                                    }
-                                    if (type == 'cer') {
-                                        webix.ajax("/api/objects/rc/"+filename,{
-                                            error:function(text, data, XmlHttpRequest){
-                                                alert(text);
-                                            },
-                                            success:function(text, data, XmlHttpRequest){
-                                                var stuff = data.json();
-                                                $$("cer_properties").setValues(stuff);
-                                                $$("object_properties_layout").showBatch("cer_batch");
-                                            }
-                                        }); 
-                                    }
+                            { view:"layout", id:"tree_viewer_layout", visibleBatch: "unfiltered_tree_viewer",
+                              rows: 
+                              [
+                                { view:"treetable", id:"tree_viewer", select: true, batch:"unfiltered_tree_viewer", 
+                                  columns:[{id:'col', header:'names', template:"{common.treetable()} #value#", fillspace:true} ],
+                                  width:300, url:"/api/objects/meta/rc/ripe-ncc-ta.cer",
+                                  on: {
+                                      onBeforeOpen: function(id) {
+                                        var item = this.getItem(id);
+                                        if (item.$count === -1)
+                                            this.loadBranch(id, null, "/api/objects/meta/rc/children/" + id);
+                                        },
+                                      onAfterSelect: function(id) {
+                                        var item = this.getItem(id);
+                                        var stub_object = {"id": item.id, "filename": item.value};
+                                        var type = stub_object['filename'].substr(stub_object['filename'].length - 3);
+                                        stub_object['type'] = type;
+                                        if (type == "cer") {
+                                          stub_object['mft_name'] = item.mft_name;
+                                        }
+                                        loadSelectedObjects(stub_object);
+                                        }
+                                      }
+                                },
+                                { view:"treetable", id:"f_tree_viewer", select: true, batch:"filtered_tree_viewer",
+                                  columns:[{id:'col', header:'names', template:"{common.treetable()} #value#", fillspace:true} ],
+                                  width:300, 
+                                  on: {
+                                    onAfterSelect: function(id) {
+                                      getSelectedObjects(id, this.getItem(id).value);
                                     }
                                   }
+                                }
+                              ]
                             },
                             { view:"resizer" },
                             { view:"layout", id:"object_properties_layout", visibleBatch: "idle_batch",
                               rows: 
                                 [
-                                { view:"property", id:"cer_properties", batch:"cer_batch",
-                                  elements:[
-                                           { label:"Resource Certificate", type:"label"},
-                                           { label:"Filename", type:"text", id:"certificate_name"},
-                                           { label:"Subject", type:"text", id:"subject"},
-                                           { label:"Issuer", type:"text", id:"issuer"},
-                                           { label:"Serial Nr.", type:"int", id:"serial_nr"},
-                                           { label:"Subject Key Identifier", type:"text", id:"subject_key_identifier"},
-                                           { label:"Authority Key Identifier", type:"text", id:"authority_key_identifier"},
-                                           { label:"Public Key", type:"text", id:"public_key"},
-                                           { label:"EE Certificate", type:"boolean", id:"isee"},
-                                           { label:"CA Certificate", type:"boolean", id:"isca"},
-                                           { label:"Root Certificate", type:"boolean", id:"isroot"},
-                                           { label:"Validity Period Start", type:"text", id:"validity_period_start"},
-                                           { label:"Validity Period End", type:"text", id:"validity_period_end"},
-                                           { label:"Valid", type:"boolean", id:"is_valid"},
-                                           { label:"Validation Errors", type:"text", id:"validation_errors"},
-                                           { label:"Validation Warnings", type:"text", id:"validation_warnings"},
-                                           ]
+                                { view:"tabview", batch:"cer_batch",
+                                  cells: 
+                                    [
+                                    { header: "Cert", 
+                                      body:
+                                        { view:"layout", id:"certificate_layout", batch:"cer_batch", 
+                                          cols: [
+                                            { view:"property", id:"cer_properties", batch:"cer_batch", nameWidth: 200, editable: false,
+                                              elements:[
+                                                       { label:"Filename", type:"text", id:"certificate_name"},
+                                                       { label:"Subject", type:"text", id:"subject"},
+                                                       { label:"Issuer", type:"text", id:"issuer"},
+                                                       { label:"Serial Nr.", type:"int", id:"serial_nr"},
+                                                       { label:"Subject Key Identifier", type:"text", id:"subject_key_identifier"},
+                                                       { label:"Authority Key Identifier", type:"text", id:"authority_key_identifier"},
+                                                       { label:"Public Key", type:"text", id:"public_key"},
+                                                       { label:"EE Certificate", type:"boolean", id:"isee"},
+                                                       { label:"CA Certificate", type:"boolean", id:"isca"},
+                                                       { label:"Root Certificate", type:"boolean", id:"isroot"},
+                                                       { label:"Validation Status", type:"label"},
+                                                       { label:"Validity Period Start", type:"text", id:"validity_period_start"},
+                                                       { label:"Validity Period End", type:"text", id:"validity_period_end"},
+                                                       { label:"Valid", type:"boolean", id:"is_valid"},
+                                                       { label:"Validation Errors", type:"text", id:"validation_errors"},
+                                                       { label:"Validation Warnings", type:"text", id:"validation_warnings"},
+                                                       ]
+                                              },
+                                              { view:"list", template: "#resource#", batch:"cer_batch", id:"cer_resource_list"}
+                                          ]
+                                        }
+                                    },
+                                    { header: "Manifest", 
+                                      body: 
+                                        { view:"property", id:"mft_properties", batch:"cer_batch",
+                                          elements:[
+                                                   { label:"Filename", type:"text", id:"manifest_name"},
+                                                   { label:"Validity Period Start", type:"text", id:"validity_period_start"},
+                                                   { label:"Validity Period End", type:"text", id:"validity_period_end"},
+                                                   { label:"Valid", type:"boolean", id:"is_valid"},
+                                                   { label:"Validation Errors", type:"text", id:"validation_errors"},
+                                                   { label:"Validation Warnings", type:"text", id:"validation_warnings"},
+                                                   { label:"Files", type:"text", id:"files"},
+                                                   ]
+                                        }
+                                    },
+                                    { header: "CRL", 
+                                      body: 
+                                        { view:"property", id:"crl_properties", batch:"cer_batch",
+                                          elements:[
+                                                   { label:"Filename", type:"text", id:"crl_name"},
+                                                   { label:"Validity Period Start", type:"text", id:"validity_period_start"},
+                                                   { label:"Validity Period End", type:"text", id:"validity_period_end"},
+                                                   { label:"Valid", type:"boolean", id:"is_valid"},
+                                                   { label:"Validation Errors", type:"text", id:"validation_errors"},
+                                                   { label:"Validation Warnings", type:"text", id:"validation_warnings"},
+                                                   { label:"Revoked Objects", type:"text", id:"revoked_objects"},
+                                                   ]
+                                        }
+                                    }
+                                    ]
                                 },
                                 { view:"property", id:"roa_properties", batch:"roa_batch",
                                   elements:[
-                                           { label:"ROA", type:"label"},
                                            { label:"Filename", type:"text", id:"roa_name"},
                                            { label:"ASN", type:"int", id:"asn"},
                                            { label:"Validity Period Start", type:"text", id:"validity_period_start"},
@@ -112,14 +222,69 @@
                                 ]
                             }
                             ]
-                    }
+                    } 
                     ]
         });
+        var window = webix.ui({
+                      view:"window", id:"filter_window", move:true, head: "Object Filter", 
+                      body: {
+                        view: "form", 
+                        elements: [
+                          { "id": "filter_attribute_radio", view: "radio", label: "Attribute", height: "100", width: "400",
+                            options: [
+                              {"id" : "filename", "value": "Filename"},
+                              {"id" : "subject", "value": "Subject"},
+                              {"id" : "issuer", "value": "Issuer"},
+                              {"id" : "serial_nr", "value": "Serial Nr."},
+                              {"id" : "resource", "value": "Resource"}
+                            ]
+                          },
+                          { "id": "filter_value_text", view: "text", label: "Search for:", name: "search_for" },
+                          { "id": "filter_filetype_radio", view: "radio", label: "File Type", value: "all", height: "50", width: "400",
+                            options: [
+                              {"id": "all", "value": "All"},
+                              {"id": "cer", "value": ".cer"},
+                              {"id": "roa", "value": ".roa"}
+                            ]
+                          },
+                          { view: "checkbox", label: "PASSED"},
+                          { view: "checkbox", label: "Warnings"},
+                          { view: "checkbox", label: "Errors"},
+                          { view: "button", value: "Apply Filter", click:function(){
+                            var filter_attribute = $$("filter_attribute_radio").getValue();
+                            filter_attribute = filter_attribute == null ? "None" : filter_attribute;
+                            var filter_value = $$("filter_value_text").getValue();
+                            filter_value = filter_attribute == null || filter_value == '' ? "None" : filter_value;
+                            var file_type = $$("filter_filetype_radio").getValue();
+                            var tree_name = "RIPE";
 
-        $$("tree_viewer").attachEvent("onAfterSelect",function(id){
-            parentId = this.getItem(id).parent;
-        })
-        $$("tree_viewer").filter("value", "Skoda");
+                            var payload = {"filter_attribute": filter_attribute, "filter_value": filter_value, "file_type" : file_type, "tree_name": tree_name}
+
+                            webix.ajax().headers({"Content-type":"application/json"}).post("/api/filter/", JSON.stringify(payload)).then( 
+                              function(result){
+                                new_data = result.json();
+                                console.log(new_data);
+                                var tree = $$("f_tree_viewer");
+                                tree.clearAll();
+                                tree.parse(new_data);
+                                $$("tree_viewer_layout").showBatch("filtered_tree_viewer");yy
+                                
+                              });
+
+
+
+                          }},
+                          { view: "button", value: "OK", click:function(){
+
+                          }},
+                          { view: "button", value: "Clear", 
+                            click:function(){
+                              $$("tree_viewer_layout").showBatch("unfiltered_tree_viewer");yy
+                          }}
+                        ]
+                      }
+              }).show();
         </script>
     </body> 
 </html>
+eight:"auto"
