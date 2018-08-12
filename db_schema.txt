@@ -42,7 +42,7 @@ CREATE TABLE roa (
     validation_errors text[],
     validation_warnings text[],
     signing_time timestamp,
-    prefixes text[],
+    :1 text[],
     parent_certificate text,
     certificate_tree text NOT NULL,
     id bigint,
