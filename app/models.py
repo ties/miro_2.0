@@ -31,7 +31,22 @@ class Roa(Base):
     def asdict(self):
         result = OrderedDict()
         for key in self.__mapper__.c.keys():
-            result[key] = getattr(self, key)
+            if getattr(self, key) == None:
+                result[key] = "None"
+            else:
+                result[key] = getattr(self, key)
+
+            if key == 'prefixes':
+                new = []
+                res = result[key]
+                res = res.replace('"', '').replace('{','').replace('}','')
+                res = res.replace('(', '').replace(')','')
+                i = 0
+                res = res.split(',')
+                while i < len(res):
+                    new.append(res[i]+'_'+res[i+1])
+                    i += 2
+                result['prefixes'] = new
         #result['day'] = result['day'].strftime('%Y-%m-%d')
         return result
 
@@ -42,7 +57,10 @@ class Manifest(Base):
     def asdict(self):
         result = OrderedDict()
         for key in self.__mapper__.c.keys():
-            result[key] = getattr(self, key)
+            if getattr(self, key) == None:
+                result[key] = "None"
+            else:
+                result[key] = getattr(self, key)
         return result
 
 
@@ -52,7 +70,10 @@ class Crl(Base):
     def asdict(self):
         result = OrderedDict()
         for key in self.__mapper__.c.keys():
-            result[key] = getattr(self, key)
+            if getattr(self, key) == None:
+                result[key] = "None"
+            else:
+                result[key] = getattr(self, key)
         return result
 
 class CertificateTree(Base):

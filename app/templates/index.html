@@ -7,22 +7,28 @@
     <body>
         <script type="text/javascript" charset="utf-8">
         function loadSelectedObjects(stub_object) {
-           var type = stub_object['filename'].substr(stub_object['filename'].length - 3);
-           if (type == 'roa') {
+           if (stub_object['type'] == 'roa') {
                webix.ajax("/api/objects/roa/"+stub_object['filename'],{
                    error:function(text, data, XmlHttpRequest){
-                       alert(text);
+                      alert(text);
                    },
                    success:function(text, data, XmlHttpRequest){
-                       var stuff = data.json();
-                       $$("roa_properties").setValues(stuff);
-                       $$("object_properties_layout").showBatch("roa_batch");
+                      var stuff = data.json();
+                      $$("roa_properties").setValues(stuff);
+                      var roa_table = $$("roa_table");
+                      roa_table.clearAll();
+                      var index = 0;
+                      stuff['prefixes'].forEach(function(pref) {
+                         var res = pref.split("_");
+                         roa_table.add({id:index, prefix: res[0], max_length: res[1]}); 
+                      });
+                      $$("object_properties_layout").showBatch("roa_batch");
                    }
                }); 
            }
-           if (type == 'cer') {
+           if (stub_object['type'] == 'cer') {
                var mft_filename = stub_object['mft_name'];
-               var crl_filename = stub_object['filename'].substr(0,stub_object['filename'].length -3)+ "crl";
+               var crl_filename = stub_object['crl_name'];
                webix.ajax("/api/objects/rc/"+ stub_object['filename'],{
                    error:function(text, data, XmlHttpRequest){
                        alert(text);
@@ -47,10 +53,12 @@
                         });
                       }
 
-                      stuff['prefixes'].forEach(function(prefix) {
-                        resource_list.add({id:index, resource: prefix});
-                        index++;
-                      });
+                      if (stuff['prefixes'] != "None") {
+                        stuff['prefixes'].forEach(function(prefix) {
+                          resource_list.add({id:index, resource: prefix});
+                          index++;
+                        });
+                      }
 
 
                       $$("cer_properties").setValues(stuff);
@@ -59,20 +67,36 @@
                }); 
                webix.ajax("/api/objects/mft/"+mft_filename,{
                    error:function(text, data, XmlHttpRequest){
-                       alert(text);
+                      alert(text);
                    },
                    success:function(text, data, XmlHttpRequest){
-                       var stuff = data.json();
-                       $$("mft_properties").setValues(stuff);
+                      var stuff = data.json();
+                      $$("mft_properties").setValues(stuff);
+                      var mft_table = $$("manifest_table");
+                      mft_table.clearAll();
+                      var index = 0 ;
+                      stuff['files'].forEach(function(entry) {
+                        var res = entry.split("_");
+                        mft_table.add({id:index, filename: res[0], hash: res[1]});
+                      });
                    }
                }); 
                webix.ajax("/api/objects/crl/"+crl_filename,{
                    error:function(text, data, XmlHttpRequest){
-                       alert(text);
+                      alert(text);
                    },
                    success:function(text, data, XmlHttpRequest){
-                       var stuff = data.json();
-                       $$("crl_properties").setValues(stuff);
+                      var stuff = data.json();
+                      $$("crl_properties").setValues(stuff);
+                      var crl_table = $$("crl_table");
+                      crl_table.clearAll();
+                      var index = 0 ;
+                      if (stuff['revoked_objects'] != "None") {
+                        stuff['revoked_objects'].forEach(function(entry) {
+                          var res = entry.split("_");
+                          crl_table.add({id:index, serial_nr: res[0], revoke_time: res[1]});
+                        });
+                      }
                    }
                }); 
            }
@@ -120,6 +144,7 @@
                                         stub_object['type'] = type;
                                         if (type == "cer") {
                                           stub_object['mft_name'] = item.mft_name;
+                                          stub_object['crl_name'] = item.crl_name;
                                         }
                                         loadSelectedObjects(stub_object);
                                         }
@@ -130,7 +155,15 @@
                                   width:300, 
                                   on: {
                                     onAfterSelect: function(id) {
-                                      getSelectedObjects(id, this.getItem(id).value);
+                                      var item = this.getItem(id);
+                                      var stub_object = {"id": item.id, "filename": item.value};
+                                      var type = stub_object['filename'].substr(stub_object['filename'].length - 3);
+                                      stub_object['type'] = type;
+                                      if (type == "cer") {
+                                        stub_object['mft_name'] = item.mft_name;
+                                        stub_object['crl_name'] = item.crl_name;
+                                      }
+                                      loadSelectedObjects(stub_object);
                                     }
                                   }
                                 }
@@ -173,46 +206,111 @@
                                     },
                                     { header: "Manifest", 
                                       body: 
-                                        { view:"property", id:"mft_properties", batch:"cer_batch",
-                                          elements:[
-                                                   { label:"Filename", type:"text", id:"manifest_name"},
-                                                   { label:"Validity Period Start", type:"text", id:"validity_period_start"},
-                                                   { label:"Validity Period End", type:"text", id:"validity_period_end"},
-                                                   { label:"Valid", type:"boolean", id:"is_valid"},
-                                                   { label:"Validation Errors", type:"text", id:"validation_errors"},
-                                                   { label:"Validation Warnings", type:"text", id:"validation_warnings"},
-                                                   { label:"Files", type:"text", id:"files"},
-                                                   ]
+                                        { view:"layout", id:"manifest_layout", batch:"cer_batch",
+                                          cols: [
+                                            { view:"property", id:"mft_properties", batch:"cer_batch", nameWidth: 200, editable: false,
+                                              elements:[
+                                                       { label:"Filename", type:"text", id:"manifest_name"},
+                                                       { label:"Validity Period Start", type:"text", id:"validity_period_start"},
+                                                       { label:"Validity Period End", type:"text", id:"validity_period_end"},
+                                                       { label:"Validation Status", type:"label"},
+                                                       { label:"Valid", type:"boolean", id:"is_valid"},
+                                                       { label:"Validation Errors", type:"text", id:"validation_errors"},
+                                                       { label:"Validation Warnings", type:"text", id:"validation_warnings"},
+                                                       ]
+                                            },
+                                            { view:"datatable", batch:"cer_batch", id:"manifest_table",
+                                              columns:[
+                                                {id:"filename", header:"Filename", width:150},
+                                                {id:"hash", header:"Hash", width:250}
+                                              ]
+                                            }
+                                          ]
                                         }
                                     },
                                     { header: "CRL", 
                                       body: 
-                                        { view:"property", id:"crl_properties", batch:"cer_batch",
-                                          elements:[
-                                                   { label:"Filename", type:"text", id:"crl_name"},
-                                                   { label:"Validity Period Start", type:"text", id:"validity_period_start"},
-                                                   { label:"Validity Period End", type:"text", id:"validity_period_end"},
-                                                   { label:"Valid", type:"boolean", id:"is_valid"},
-                                                   { label:"Validation Errors", type:"text", id:"validation_errors"},
-                                                   { label:"Validation Warnings", type:"text", id:"validation_warnings"},
-                                                   { label:"Revoked Objects", type:"text", id:"revoked_objects"},
-                                                   ]
+                                        { view:"layout", id:"crl_layout", batch: "cer_batch",
+                                          cols:[
+                                            { view:"property", id:"crl_properties", batch:"cer_batch", nameWidth: 200, editable: false,
+                                              elements:[
+                                                       { label:"Filename", type:"text", id:"crl_name"},
+                                                       { label:"Validity Period Start", type:"text", id:"validity_period_start"},
+                                                       { label:"Validity Period End", type:"text", id:"validity_period_end"},
+                                                       { label:"Validation Status", type:"label"},
+                                                       { label:"Valid", type:"boolean", id:"is_valid"},
+                                                       { label:"Validation Errors", type:"text", id:"validation_errors"},
+                                                       { label:"Validation Warnings", type:"text", id:"validation_warnings"},
+                                                       ]
+                                            },
+                                            { view:"datatable", batch:"cer_batch", id:"crl_table",
+                                              columns:[
+                                                {id:"serial_nr", header:"Serial Number", width:100},
+                                                {id:"revoke_time", header:"Revocation Time", width: 200}
+                                              ]
+                                            }
+                                          ]
                                         }
                                     }
                                     ]
                                 },
-                                { view:"property", id:"roa_properties", batch:"roa_batch",
-                                  elements:[
-                                           { label:"Filename", type:"text", id:"roa_name"},
-                                           { label:"ASN", type:"int", id:"asn"},
-                                           { label:"Validity Period Start", type:"text", id:"validity_period_start"},
-                                           { label:"Validity Period End", type:"text", id:"validity_period_end"},
-                                           { label:"Valid", type:"boolean", id:"is_valid"},
-                                           { label:"Validation Errors", type:"text", id:"validation_errors"},
-                                           { label:"Validation Warnings", type:"text", id:"validation_warnings"},
-                                           { label:"Signing Time", type:"text", id:"signing_time"},
-                                           { label:"Prefixes", type:"text", id:"prefixes"},
-                                           ]
+                                { view:"tabview", batch:"roa_batch",
+                                  cells: [
+                                    {header:"ROA", 
+                                     body: 
+                                      { view:"layout", id:"roa_layout", batch: "roa_batch",
+                                        cols: [
+                                          { view:"property", id:"roa_properties", batch:"roa_batch", nameWidth: 200, editable: false,
+                                            elements:[
+                                                     { label:"Filename", type:"text", id:"roa_name"},
+                                                     { label:"ASN", type:"int", id:"asn"},
+                                                     { label:"Signing Time", type:"text", id:"signing_time"},
+                                                     { label:"Validity Period Start", type:"text", id:"validity_period_start"},
+                                                     { label:"Validity Period End", type:"text", id:"validity_period_end"},
+                                                       { label:"Validation Status", type:"label"},
+                                                     { label:"Valid", type:"boolean", id:"is_valid"},
+                                                     { label:"Validation Errors", type:"text", id:"validation_errors"},
+                                                     { label:"Validation Warnings", type:"text", id:"validation_warnings"}
+                                                     ]
+                                          },
+                                          { view:"datatable", batch:"roa_batch", id:"roa_table",
+                                            columns:[
+                                              {id:"prefix", header:"Prefix", width:200},
+                                              {id:"max_length", header:"Max. Length", width:50}
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    { header: "EE Cert", 
+                                      body:
+                                        { view:"layout", id:"ee_certificate_layout", batch:"roa_batch", 
+                                          cols: [
+                                            { view:"property", id:"ee_cer_properties", batch:"roa_batch", nameWidth: 200, editable: false,
+                                              elements:[
+                                                       { label:"Filename", type:"text", id:"certificate_name"},
+                                                       { label:"Subject", type:"text", id:"subject"},
+                                                       { label:"Issuer", type:"text", id:"issuer"},
+                                                       { label:"Serial Nr.", type:"int", id:"serial_nr"},
+                                                       { label:"Subject Key Identifier", type:"text", id:"subject_key_identifier"},
+                                                       { label:"Authority Key Identifier", type:"text", id:"authority_key_identifier"},
+                                                       { label:"Public Key", type:"text", id:"public_key"},
+                                                       { label:"EE Certificate", type:"boolean", id:"isee"},
+                                                       { label:"CA Certificate", type:"boolean", id:"isca"},
+                                                       { label:"Root Certificate", type:"boolean", id:"isroot"},
+                                                       { label:"Validation Status", type:"label"},
+                                                       { label:"Validity Period Start", type:"text", id:"validity_period_start"},
+                                                       { label:"Validity Period End", type:"text", id:"validity_period_end"},
+                                                       { label:"Valid", type:"boolean", id:"is_valid"},
+                                                       { label:"Validation Errors", type:"text", id:"validation_errors"},
+                                                       { label:"Validation Warnings", type:"text", id:"validation_warnings"},
+                                                       ]
+                                              },
+                                              { view:"list", template: "#resource#", batch:"roa_batch", id:"ee_cer_resource_list"}
+                                          ]
+                                        }
+                                    }
+                                  ]
                                 },
                                 { view:"property", id:"idle_properties", batch:"idle_batch",
                                   elements:[
@@ -267,10 +365,9 @@
                                 var tree = $$("f_tree_viewer");
                                 tree.clearAll();
                                 tree.parse(new_data);
-                                $$("tree_viewer_layout").showBatch("filtered_tree_viewer");yy
+                                $$("tree_viewer_layout").showBatch("filtered_tree_viewer");
                                 
                               });
-
 
 
                           }},
@@ -279,7 +376,7 @@
                           }},
                           { view: "button", value: "Clear", 
                             click:function(){
-                              $$("tree_viewer_layout").showBatch("unfiltered_tree_viewer");yy
+                              $$("tree_viewer_layout").showBatch("unfiltered_tree_viewer");
                           }}
                         ]
                       }
@@ -287,4 +384,3 @@
         </script>
     </body> 
 </html>
-eight:"auto"

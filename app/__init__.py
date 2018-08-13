@@ -2,6 +2,8 @@ from flask import Flask, render_template, send_file, redirect, request, jsonify
 from config import app_config
 from app.database import db_session
 from app.models import CertificateTree, ResourceCertificate, Roa, Manifest, Crl
+from sqlalchemy.sql import operators
+from IPy import IP
 #from app.data_api import data_api
 #from app.analysis_api import analysis_api
 #from app.util import DateConverter
@@ -11,6 +13,21 @@ def jsonify_or_error(obj, obj_name):
         return jsonify(obj.asdict())
     else:
         return jsonify({'error':True, 'description': "File doesn't exist", 'filename': obj_name})
+
+def is_asn(value):
+    try:
+        asn = int(value)
+        return True
+    except ValueError:
+        return False
+
+def is_ip(value):
+    try:
+        ip = IP(value)
+        return True
+    except ValueError:
+        return False
+
 
 
 def create_app(config_name):
@@ -34,7 +51,7 @@ def create_app(config_name):
         f = {'parent': parent_id, 'data': []}
         for c in rc:
             c = c.asdict()
-            d = {'id': c['id'], 'value': c['certificate_name'], 'webix_kids': c['has_kids'], 'mft_name': c['manifest']}
+            d = {'id': c['id'], 'value': c['certificate_name'], 'webix_kids': c['has_kids'], 'mft_name': c['manifest'], 'crl_name': c['crl']}
             f['data'].append(d)
         for roa in roas:
             roa = roa.asdict()
@@ -47,7 +64,7 @@ def create_app(config_name):
     def get_resource_certificate_meta(cert_name):
         rc = db_session.query(ResourceCertificate).filter(ResourceCertificate.certificate_name == cert_name).first()
         rc = rc.asdict()
-        d = {'id': rc['id'], 'value': rc['certificate_name'], 'webix_kids': rc['has_kids'], 'mft_name': rc['manifest']}
+        d = {'id': rc['id'], 'value': rc['certificate_name'], 'webix_kids': rc['has_kids'], 'mft_name': rc['manifest'], 'crl_name': rc['crl']}
         return jsonify(d)
 
 
@@ -94,24 +111,56 @@ def create_app(config_name):
         results = []
         
         if file_type == "cer" or file_type == "all":
-            query = db_session.query(ResourceCertificate.id, ResourceCertificate.certificate_name).filter(ResourceCertificate.certificate_tree == cert_tree)
+            query = db_session.query(ResourceCertificate.id, ResourceCertificate.certificate_name, ResourceCertificate.manifest, ResourceCertificate.crl).filter(ResourceCertificate.certificate_tree == cert_tree)
             if filter_attr == "filename":
                 query = query.filter(ResourceCertificate.certificate_name.like("%"+filter_value+"%"))
+                [results.append({'id':rc[0], 'value':rc[1], 'mft_name':rc[2], 'crl_name':rc[3]}) for rc in query]
+            elif filter_attr == "subject":
+                query = query.filter(ResourceCertificate.subject.like("%"+filter_value+"%"))
+                [results.append({'id':rc[0], 'value':rc[1], 'mft_name':rc[2], 'crl_name':rc[3]}) for rc in query]
+            elif filter_attr == "issuer":
+                query = query.filter(ResourceCertificate.issuer.like("%"+filter_value+"%"))
+                [results.append({'id':rc[0], 'value':rc[1], 'mft_name':rc[2], 'crl_name':rc[3]}) for rc in query]
+            elif filter_attr == "serial_nr":
+                query = query.filter(ResourceCertificate.serial_nr == int(filter_value))
+                [results.append({'id':rc[0], 'value':rc[1], 'mft_name':rc[2], 'crl_name':rc[3]}) for rc in query]
+            elif filter_attr == "resource":
+                if is_asn(filter_value):
+                    asn = int(filter_value)
+                    sql_query = "select id, certificate_name, manifest, crl from resource_certificate where (({0}::int8 <@ ANY (asn_ranges) OR {0} =ANY(asns)) AND certificate_tree='{1}');".format(asn, cert_tree)
+                    query = db_session.execute(sql_query)
+                    [results.append({'id':rc[0], 'value':rc[1], 'mft_name':rc[2], 'crl_name':rc[3]}) for rc in query]
+                elif is_ip(filter_value):
+                    sql_query = "select id, certificate_name, manifest, crl from resource_certificate where ('{0}'::inet <<= ANY (prefixes) AND certificate_tree='{1}');".format(filter_value, cert_tree)
+                    query = db_session.execute(sql_query)
+                    [results.append({'id':rc[0], 'value':rc[1], 'mft_name':rc[2], 'crl_name':rc[3]}) for rc in query]
 
-            [results.append({'id':rc[0], 'value':rc[1]}) for rc in query.all()]
-            return jsonify(results)
+        if file_type == "roa" or file_type == "all":
+            query = db_session.query(Roa.id, Roa.roa_name).filter(Roa.certificate_tree == cert_tree)
+            if filter_attr == "filename":
+                query = query.filter(Roa.roa_name.like("%"+filter_value+"%"))
+                [results.append({'id':rc[0], 'value':rc[1]}) for rc in query.all()]
+            elif filter_attr == "subject":
+                query = query.filter(Roa.roa_name.like("%"+filter_value+"%"))
+                [results.append({'id':rc[0], 'value':rc[1]}) for rc in query.all()]
+            elif filter_attr == "issuer":
+                query = query.filter(Roa.roa_name.like("%"+filter_value+"%"))
+                [results.append({'id':rc[0], 'value':rc[1]}) for rc in query.all()]
+            elif filter_attr == "serial_nr":
+                query = query.filter(Roa.roa_name == "WAT")
+                [results.append({'id':rc[0], 'value':rc[1]}) for rc in query.all()]
+            elif filter_attr == "resource":
+                if is_asn(filter_value):
+                    asn = int(filter_value)
+                    query = query.filter(Roa.asn == asn)
+                    [results.append({'id':rc[0], 'value':rc[1]}) for rc in query.all()]
+                elif is_ip(filter_value):
+                    sql_query = "SELECT id, roa_name FROM roa WHERE '{0}'::inet <@ ANY (prefixes) AND certificate_tree='{1}';".format(filter_value, cert_tree)
+                    print(sql_query)
+                    query = db_session.execute(sql_query)
+                    [results.append({'id':rc[0], 'value':rc[1]}) for rc in query]
+        return jsonify(results)
 
-        return 'JSON posted\n'
-
-        # "Certificate Tree: (tree_name")
-        # "Parent object" : If null, only look at TA of cert_tree. if not null,
-        # only look at children of that parent object
-        # "File type: [.cer, .roa, or "both"]
-        # validation status: [passed, warning, error] (has ot be at least one)
-        # filename
-        # location (not yet)
-        # subject, issuer
-        # Resource (IP, ASN, Ip prefix)
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):
