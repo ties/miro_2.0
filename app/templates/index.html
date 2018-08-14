@@ -122,6 +122,47 @@
                                 $$("filter_window").show();
                               }},
                             { view:"button", value:"Clear Filter", width: 70},
+                            { view:"richselect", id:"cert_tree_combo", width: 100, editable: false, 
+                              options: {
+                                body: {
+                                  template: "#tree_name#",
+                                  data: []
+                                }
+                              },
+                              on: 
+                              {
+                                "onAfterRender": function() {
+                                  webix.ajax("/api/objects/ct/all",{
+                                    error:function(text, data, XmlHttpRequest){
+                                      alert(text);
+                                    },
+                                    success:function(text, data, XmlHttpRequest){
+                                      var trees = data.json();
+                                      var combo = $$("cert_tree_combo");
+                                      var new_options = [];
+                                      trees.forEach(function(entry){
+                                        entry['id'] = entry['tree_name']
+                                        new_options.push(entry);
+                                      });
+                                      combo.getList().parse(new_options);
+                                      combo.setValue(new_options[0].id);
+                                    }
+                                  }); 
+                                },
+                                "onChange": function(new_v, old_v) {
+                                  var combo = $$("cert_tree_combo");
+                                  var tree_item = combo.getList().getItem(new_v);
+                                  $$("tree_viewer").clearAll();
+                                  $$("tree_viewer").define("url", "/api/objects/meta/rc/" + tree_item.trust_anchor_name);
+                                  $$("tree_viewer").refresh();
+
+                                }
+
+
+
+                              } 
+                            }
+
                             ] 
                     },
                     { cols: [
@@ -130,7 +171,7 @@
                               [
                                 { view:"treetable", id:"tree_viewer", select: true, batch:"unfiltered_tree_viewer", 
                                   columns:[{id:'col', header:'names', template:"{common.treetable()} #value#", fillspace:true} ],
-                                  width:300, url:"/api/objects/meta/rc/ripe-ncc-ta.cer",
+                                  width:300,
                                   on: {
                                       onBeforeOpen: function(id) {
                                         var item = this.getItem(id);
@@ -324,7 +365,8 @@
                     ]
         });
         var window = webix.ui({
-                      view:"window", id:"filter_window", move:true, head: "Object Filter", 
+                      view:"window", id:"filter_window", move:true, hidden: true,
+                      head: {view:"button", label:"Close", width:70, click:("$$('filter_window').hide();")}, 
                       body: {
                         view: "form", 
                         elements: [
@@ -345,9 +387,9 @@
                               {"id": "roa", "value": ".roa"}
                             ]
                           },
-                          { view: "checkbox", label: "PASSED"},
-                          { view: "checkbox", label: "Warnings"},
-                          { view: "checkbox", label: "Errors"},
+                          { view: "checkbox", id:'filter_check_valid', label: "Valid", value:1},
+                          { view: "checkbox", id:'filter_check_warnings', label: "Warnings", value:1},
+                          { view: "checkbox", id:'filter_check_errors', label: "Errors", value:1 },
                           { view: "button", value: "Apply Filter", click:function(){
                             var filter_attribute = $$("filter_attribute_radio").getValue();
                             filter_attribute = filter_attribute == null ? "None" : filter_attribute;
@@ -356,7 +398,9 @@
                             var file_type = $$("filter_filetype_radio").getValue();
                             var tree_name = "RIPE";
 
-                            var payload = {"filter_attribute": filter_attribute, "filter_value": filter_value, "file_type" : file_type, "tree_name": tree_name}
+                            var payload = {"filter_attribute": filter_attribute, "filter_value": filter_value, "file_type" : file_type, "tree_name": tree_name,
+                                           "include_valids": $$('filter_check_valid').getValue(), "include_warnings": $$('filter_check_warnings').getValue(),
+                                           "include_errors": $$('filter_check_errors').getValue()}
 
                             webix.ajax().headers({"Content-type":"application/json"}).post("/api/filter/", JSON.stringify(payload)).then( 
                               function(result){
@@ -380,7 +424,7 @@
                           }}
                         ]
                       }
-              }).show();
+              });
         </script>
     </body> 
 </html>

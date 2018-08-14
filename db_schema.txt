@@ -59,11 +59,10 @@ CREATE TABLE certificate_tree (
     trust_anchor_name text PRIMARY KEY,
     UNIQUE (tree_name)
 );
-
 CREATE TABLE resource_certificate (
     certificate_name text PRIMARY KEY,
     subject text,
-    serial_nr bigint,
+    serial_nr numeric,
     issuer text,
     subject_key_identifier text,
     authority_key_identifier text,
@@ -87,10 +86,9 @@ CREATE TABLE resource_certificate (
     parent_id bigint,
     has_kids boolean
 );
-
 CREATE TABLE roa (
     roa_name text PRIMARY KEY,
-    asn bigint,
+    asn numeric,
     validity_period_start timestamp,
     validity_period_end timestamp,
     is_valid boolean,
@@ -103,7 +101,6 @@ CREATE TABLE roa (
     id bigint,
     parent_id bigint
 );
-
 CREATE TABLE manifest (
     manifest_name text PRIMARY KEY,
     files text[],
@@ -114,10 +111,9 @@ CREATE TABLE manifest (
     validation_warnings text[],
     parent_certificate text,
     certificate_tree text NOT NULL,
-    id bigint,
+    id numeric,
     parent_id bigint
 );
-
 CREATE TABLE crl (
     crl_name text PRIMARY KEY,
     revoked_objects text[],
@@ -128,6 +124,6 @@ CREATE TABLE crl (
     validation_warnings text[],
     parent_certificate text,
     certificate_tree text NOT NULL,
-    id bigint,
+    id numeric,
     parent_id bigint
 );

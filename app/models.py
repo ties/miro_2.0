@@ -10,7 +10,6 @@ class ResourceCertificate(Base):
         for key in self.__mapper__.c.keys():
             if getattr(self, key) == None:
                 result[key] = "None"
-
             else:
                 if key == "asn_ranges":
                     hurr = getattr(self, key)
@@ -20,6 +19,8 @@ class ResourceCertificate(Base):
                             d = {'lower':num_range.lower, 'upper':num_range.upper}
                             rngs.append(d)
                         result[key] = rngs
+                elif key == "serial_nr":
+                    result[key] = str(getattr(self, key))
                 else:
                     result[key] = getattr(self, key)
         return result
