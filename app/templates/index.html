@@ -417,7 +417,9 @@
                             var filter_value = $$("filter_value_text").getValue();
                             filter_value = filter_attribute == null || filter_value == '' ? "None" : filter_value;
                             var file_type = $$("filter_filetype_radio").getValue();
-                            var tree_name = "RIPE";
+
+                            var tree_name = $$("cert_tree_combo").getValue();
+                            console.log(tree_name);
 
                             var payload = {"filter_attribute": filter_attribute, "filter_value": filter_value, "file_type" : file_type, "tree_name": tree_name,
                                            "include_valids": $$('filter_check_valid').getValue(), "include_warnings": $$('filter_check_warnings').getValue(),
