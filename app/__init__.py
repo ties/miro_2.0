@@ -1,7 +1,7 @@
 from flask import Flask, render_template, send_file, redirect, request, jsonify
 from config import app_config
 from app.database import db_session
-from app.models import CertificateTree, ResourceCertificate, Roa, Manifest, Crl
+from app.models import CertificateTree, ResourceCertificate, Roa, Manifest, Crl, Stats
 from sqlalchemy.sql import operators
 from IPy import IP
 #from app.data_api import data_api
@@ -31,6 +31,7 @@ def is_ip(value):
 
 
 def create_app(config_name):
+    print(config_name)
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(app_config[config_name])
     app.config.from_pyfile('config.py')
@@ -51,11 +52,11 @@ def create_app(config_name):
         f = {'parent': parent_id, 'data': []}
         for c in rc:
             c = c.asdict()
-            d = {'id': c['id'], 'value': c['certificate_name'], 'webix_kids': c['has_kids'], 'mft_name': c['manifest'], 'crl_name': c['crl']}
+            d = {'id': c['id'], 'value': c['certificate_name'], 'webix_kids': c['has_kids'], 'mft_name': c['manifest'], 'crl_name': c['crl'], 'icon':c['validation_status'].lower()}
             f['data'].append(d)
         for roa in roas:
             roa = roa.asdict()
-            d = {'id': roa['id'], 'value': roa['roa_name'], 'webix_kids': False }
+            d = {'id': roa['id'], 'value': roa['roa_name'], 'webix_kids': False, 'icon':roa['validation_status'].lower() }
             f['data'].append(d)
         return jsonify(f)
 
@@ -64,7 +65,7 @@ def create_app(config_name):
     def get_resource_certificate_meta(cert_name):
         rc = db_session.query(ResourceCertificate).filter(ResourceCertificate.certificate_name == cert_name).first()
         rc = rc.asdict()
-        d = {'id': rc['id'], 'value': rc['certificate_name'], 'webix_kids': rc['has_kids'], 'mft_name': rc['manifest'], 'crl_name': rc['crl']}
+        d = {'id': rc['id'], 'value': rc['certificate_name'], 'webix_kids': rc['has_kids'], 'mft_name': rc['manifest'], 'crl_name': rc['crl'],  'icon':rc['validation_status'].lower()}
         return jsonify(d)
 
 
@@ -88,6 +89,11 @@ def create_app(config_name):
     def get_manifest(mft_name):
         rc = db_session.query(Manifest).filter(Manifest.manifest_name == mft_name).first()
         return jsonify_or_error(rc, mft_name)
+    
+    @app.route('/api/stats/all')
+    def get_stats():
+        stats = db_session.query(Stats).all()
+        return jsonify([r.asdict() for r in stats])
 
     @app.route('/api/objects/crl/<crl_name>')
     def get_crl(crl_name):

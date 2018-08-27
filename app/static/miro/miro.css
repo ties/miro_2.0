@@ -1,0 +1,112 @@
+.navbar_button {
+}
+
+.navbar_button button {
+	border: none !important;
+}
+
+
+.navbar_button .text {
+	color: white;
+}
+
+
+
+
+
+.browser_toolbar {
+	background: #333333 !important;
+}
+
+.browser_toolbar_button button {
+	border:none !important;
+
+}
+
+.browser_toolbar_button button:active {
+	background: #272727 ;
+}
+
+
+
+
+
+.browser_toolbar_richselect .webix_el_box .webix_inp_static {
+	background-color: #333333 !important;
+	color: white;
+}
+
+.browser_toolbar_richselect_list .webix_list_item.webix_selected {
+	background-color: #000000 !important;
+}
+
+.browser_toolbar_richselect_list {
+	background-color: #000000 !important;
+	color: red !important;
+}
+
+
+
+.browser_tree_viewer .webix_row_select {
+	background-color: #158DB8!important;
+}
+
+.webix_tree_passed{
+    background-image: url("images/valid.png")
+}
+.webix_tree_warning{
+    background-image: url("images/warning.png")
+}
+.webix_tree_error{
+    background-image: url("images/error.png")
+}
+
+
+.browser_object_tabview .webix_item_tab {
+	background: #EEEEEE !important;
+	color:black;
+	border:none;
+	border-radius:0px !important;
+}
+
+.browser_object_tabview .webix_item_tab.webix_selected {
+	background: #FFFFFF !important;
+	color:black;
+	border:none;
+}
+
+.browser_object_tabview .webix_after_all_tabs {
+	background: #FFFFFF !important;
+	color:black;
+	border:none;
+}
+
+.browser_object_tabview .webix_tab_filler {
+	background: #FFFFFF !important;
+	border:none;
+}
+
+
+.browser_object_properties_header {
+	padding-left:10px;
+	height:25px !important;
+	background-color:#3A99D8 !important;
+}
+
+.browser_object_properties_header .webix_template {
+	color: #FFFFFF !important;
+	font-size: 16px;
+	vertical-align: middle;
+	text-align:center;
+	line-height:25px;
+	padding:0px;
+}
+
+
+
+
+
+
+
+
+
