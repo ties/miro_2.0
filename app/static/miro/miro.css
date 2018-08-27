@@ -102,6 +102,21 @@
 	padding:0px;
 }
 
+.filter_form_header {
+	padding-left:10px;
+	height:25px !important;
+	background-color:#3A99D8 !important;
+}
+
+.filter_form_header .webix_template {
+	color: #FFFFFF !important;
+	font-size: 16px;
+	vertical-align: middle;
+	text-align:left;
+	line-height:25px;
+	padding:0px;
+}
+
 
 
 

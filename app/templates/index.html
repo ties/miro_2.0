@@ -372,12 +372,19 @@
                     ]
         });
         var window = webix.ui({
-                      view:"window", id:"filter_window", move:true, hidden: true,
-                      head: {view:"button", label:"Close", width:70, click:("$$('filter_window').hide();")}, 
+                      view:"window", id:"filter_window", move:true, hidden: true, height:"500",
+                      head: 
+                        { view: "toolbar",
+                          cols: [
+                            {view:"label", label: "Filter Options" },
+                            {view:"button", label:"Close", align:'right', width:70, click:("$$('filter_window').hide();")}
+                          ]
+                        },
                       body: {
                         view: "form", 
                         elements: [
-                          { "id": "filter_attribute_radio", view: "radio", label: "Attribute", height: "100", width: "400",
+                          { view: "template", template: "Choose filter attribute:", type: "header", css:"filter_form_header"},
+                          { "id": "filter_attribute_radio", view: "radio", label: "Attribute", height:"60", width: "400",
                             options: [
                               {"id" : "filename", "value": "Filename"},
                               {"id" : "subject", "value": "Subject"},
@@ -387,16 +394,23 @@
                             ]
                           },
                           { "id": "filter_value_text", view: "text", label: "Search for:", name: "search_for" },
-                          { "id": "filter_filetype_radio", view: "radio", label: "File Type", value: "all", height: "50", width: "400",
+
+                          { view: "template", template: "Select file type:", type: "header", css:"filter_form_header"},
+                          { "id": "filter_filetype_radio", view: "radio", value: "all", height: "50", width: "400",
                             options: [
                               {"id": "all", "value": "All"},
                               {"id": "cer", "value": ".cer"},
                               {"id": "roa", "value": ".roa"}
                             ]
                           },
-                          { view: "checkbox", id:'filter_check_valid', label: "Valid", value:1},
-                          { view: "checkbox", id:'filter_check_warnings', label: "Warnings", value:1},
-                          { view: "checkbox", id:'filter_check_errors', label: "Errors", value:1 },
+                          { view: "template", template: "Select validation status:", type: "header", css:"filter_form_header"},
+                          { view:"layout", 
+                            cols: [
+                              { view: "checkbox", id:'filter_check_valid', label: "Valid", value:1},
+                              { view: "checkbox", id:'filter_check_warnings', label: "Warnings", value:1},
+                              { view: "checkbox", id:'filter_check_errors', label: "Errors", value:1 }
+                            ]
+                          },
                           { view: "button", value: "Apply Filter", click:function(){
                             var filter_attribute = $$("filter_attribute_radio").getValue();
                             filter_attribute = filter_attribute == null ? "None" : filter_attribute;
@@ -420,9 +434,6 @@
                                 
                               });
 
-
-                          }},
-                          { view: "button", value: "OK", click:function(){
 
                           }},
                           { view: "button", value: "Clear", 
