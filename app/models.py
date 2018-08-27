@@ -85,3 +85,12 @@ class CertificateTree(Base):
         for key in self.__mapper__.c.keys():
             result[key] = getattr(self, key)
         return result
+
+class Stats(Base):
+    __tablename__ = 'stats'
+
+    def asdict(self):
+        result = OrderedDict()
+        for key in self.__mapper__.c.keys():
+            result[key] = getattr(self, key)
+        return result
