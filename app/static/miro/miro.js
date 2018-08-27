@@ -17,6 +17,40 @@
                       $$("object_properties_layout").showBatch("roa_batch");
                    }
                }); 
+
+               webix.ajax("/api/objects/roa_rc/" + stub_object['filename'], {
+               	error:function(text, data, XmlHttpRequest) {
+               		alert(text);
+               	},
+               	success:function(text, data, XmlHttpRequest) {
+               		var content = data.json();
+                    content['width'] = 500;
+                    var resource_list = $$("ee_cer_resource_list");
+                    resource_list.clearAll();
+                    var index = 0;
+                    if (content['asn_ranges'] != "None") {
+                    	content['asn_ranges'].forEach(function(range) {
+                        	resource_list.add({id:index, resource: "AS" + range['lower'] + " - AS" + range['upper']});
+                        	index++;
+                      	});
+                    }
+
+                    if (content['asns'] != "None") {
+                    	content['asns'].forEach(function(asn) {
+                        	resource_list.add({id:index, resource: "AS"+asn});
+                        	index++;
+                        });
+                    }
+
+                    if (content['prefixes'] != "None") {
+                    	content['prefixes'].forEach(function(prefix) {
+                        	resource_list.add({id:index, resource: prefix});
+                        	index++;
+                        });
+                    }
+                    $$("ee_cer_properties").setValues(content);
+               	}
+               })
            }
            if (stub_object['type'] == 'cer') {
                var mft_filename = stub_object['mft_name'];

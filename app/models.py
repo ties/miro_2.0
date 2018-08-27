@@ -51,6 +51,28 @@ class Roa(Base):
         #result['day'] = result['day'].strftime('%Y-%m-%d')
         return result
 
+class RoaResourceCertificate(Base):
+    __tablename__= 'roa_resource_certificate'
+
+    def asdict(self):
+        result = OrderedDict()
+        for key in self.__mapper__.c.keys():
+            if getattr(self, key) == None:
+                result[key] = "None"
+            else:
+                if key == "asn_ranges":
+                    hurr = getattr(self, key)
+                    if hurr:
+                        rngs = []
+                        for num_range in hurr:
+                            d = {'lower':num_range.lower, 'upper':num_range.upper}
+                            rngs.append(d)
+                        result[key] = rngs
+                elif key == "serial_nr":
+                    result[key] = str(getattr(self, key))
+                else:
+                    result[key] = getattr(self, key)
+        return result
 
 class Manifest(Base):
     __tablename__ = 'manifest'

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, send_file, redirect, request, jsonify
 from config import app_config
 from app.database import db_session
-from app.models import CertificateTree, ResourceCertificate, Roa, Manifest, Crl, Stats
+from app.models import CertificateTree, ResourceCertificate, Roa, Manifest, Crl, Stats, RoaResourceCertificate
 from sqlalchemy.sql import operators
 from IPy import IP
 #from app.data_api import data_api
@@ -105,6 +105,11 @@ def create_app(config_name):
         rc = db_session.query(Roa).filter(Roa.roa_name == roa_name).first()
         return jsonify(rc.asdict())
 
+    @app.route('/api/objects/roa_rc/<roa_name>')
+    def get_roa_rc(roa_name):
+        rc = db_session.query(RoaResourceCertificate).filter(RoaResourceCertificate.roa_container == roa_name).first()
+        return jsonify(rc.asdict())
+
     @app.route('/api/filter/', methods = ['POST'])
     def filter_objects():
         content = request.get_json()
@@ -117,6 +122,7 @@ def create_app(config_name):
         incl_warnings = content['include_warnings']
         incl_errors = content['include_errors']
         results = []
+        print(content)
         
         if file_type == "cer" or file_type == "all":
             query = db_session.query(ResourceCertificate.id, ResourceCertificate.certificate_name, ResourceCertificate.manifest, ResourceCertificate.crl).filter(ResourceCertificate.certificate_tree == cert_tree)
@@ -133,6 +139,7 @@ def create_app(config_name):
             if filter_attr == "filename":
                 query = query.filter(ResourceCertificate.certificate_name.like("%"+filter_value+"%"))
                 [results.append({'id':rc[0], 'value':rc[1], 'mft_name':rc[2], 'crl_name':rc[3]}) for rc in query]
+                print(query)
             elif filter_attr == "subject":
                 query = query.filter(ResourceCertificate.subject.like("%"+filter_value+"%"))
                 [results.append({'id':rc[0], 'value':rc[1], 'mft_name':rc[2], 'crl_name':rc[3]}) for rc in query]
@@ -181,16 +188,20 @@ def create_app(config_name):
         if file_type == "roa" or file_type == "all":
             query = db_session.query(Roa.id, Roa.roa_name).filter(Roa.certificate_tree == cert_tree)
             if filter_attr == "filename":
+                query = db_session.query(Roa.id, Roa.roa_name).filter(Roa.certificate_tree == cert_tree)
                 query = query.filter(Roa.roa_name.like("%"+filter_value+"%"))
                 [results.append({'id':rc[0], 'value':rc[1]}) for rc in query.all()]
             elif filter_attr == "subject":
-                query = query.filter(Roa.roa_name.like("%"+filter_value+"%"))
+                query = db_session.query(RoaResourceCertificate.parent_id, RoaResourceCertificate.roa_container).filter(RoaResourceCertificate.certificate_tree == cert_tree)
+                query = query.filter(RoaResourceCertificate.subject.like("%"+filter_value+"%"))
                 [results.append({'id':rc[0], 'value':rc[1]}) for rc in query.all()]
             elif filter_attr == "issuer":
-                query = query.filter(Roa.roa_name.like("%"+filter_value+"%"))
+                query = db_session.query(RoaResourceCertificate.parent_id, RoaResourceCertificate.roa_container).filter(RoaResourceCertificate.certificate_tree == cert_tree)
+                query = query.filter(RoaResourceCertificate.issuer.like("%"+filter_value+"%"))
                 [results.append({'id':rc[0], 'value':rc[1]}) for rc in query.all()]
             elif filter_attr == "serial_nr":
-                query = query.filter(Roa.roa_name == "WAT")
+                query = db_session.query(RoaResourceCertificate.parent_id, RoaResourceCertificate.roa_container).filter(RoaResourceCertificate.certificate_tree == cert_tree)
+                query = query.filter(RoaResourceCertificate.serial_nr == int(filter_value))
                 [results.append({'id':rc[0], 'value':rc[1]}) for rc in query.all()]
             elif filter_attr == "resource":
                 if is_asn(filter_value):
