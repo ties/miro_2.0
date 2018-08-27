@@ -109,7 +109,7 @@
                                                 }
                                               }
                                         },
-                                        { view:"treetable", id:"f_tree_viewer", select: true, batch:"filtered_tree_viewer",
+                                        { view:"treetable", id:"f_tree_viewer", select: true, batch:"filtered_tree_viewer", css:"browser_tree_viewer",
                                           columns:[{id:'col', header:false, template:"{common.treetable()} #value#", fillspace:true} ],
                                           width:300, 
                                           on: {
@@ -310,56 +310,9 @@
                           ]
                         },
                         { view:"layout", id:"stats_tabview", batch:"stats",
-                          rows: [
-                              {view:"toolbar", id:"stats_toolbar", 
-                               elements:[
-                                    { view:"richselect", id:"stats_tree_select", width: 100, editable: false, 
-                                      options: {
-                                        body: {
-                                          template: "#certificate_tree#",
-                                          data: []
-                                        }
-                                      },
-                                      on: 
-                                      {
-                                        "onAfterRender": function() {
-                                          webix.ajax("/api/stats/all",{
-                                            error:function(text, data, XmlHttpRequest){
-                                              alert(text);
-                                            },
-                                            success:function(text, data, XmlHttpRequest){
-                                              var stats = data.json();
-                                              var select = $$("stats_tree_select");
-                                              var new_options = [];
-                                              stats.forEach(function(entry){
-                                                entry['id'] = entry['certificate_tree']
-                                                new_options.push(entry);
-                                              });
-                                              select.getList().parse(new_options);
-                                              select.setValue(new_options[0].id);
-                                            }
-                                          }); 
-                                        },
-                                        "onChange": function(new_v, old_v) {
-                                          var select = $$("stats_tree_select");
-                                          var stats_item = select.getList().getItem(new_v);
-                                          // $$("stats_tree_viewer").clearAll();
-                                          var input = {"total": stats_item}
-                                          // $$("stats_tree_viewer").parse();
-                                          // $$("tree_viewer").refresh();
-
-                                        }
-
-
-
-                                      } 
-                                    }
-                               ]
-                              },
-                              {view:"layout", 
-                                cols: [
-                                  { view:"treetable", id:"stats_tree_viewer", select: true, data:[],
-                                    columns:[{id:'stats_col', header:'stats_keys', template:"{common.treetable()} #certificate_tree#", fillspace:true} ],
+                          cols: [
+                                { view:"treetable", id:"stats_tree_viewer", select: true, data:[], css:"browser_tree_viewer", header:false, 
+                                    columns:[{id:'stats_col', header:false, template:"{common.treetable()} #certificate_tree#", fillspace:true} ],
                                     width:300,
                                     ready: function(){
                                       webix.ajax("/api/stats/all", {
@@ -396,11 +349,11 @@
                                               chart.add({id: entry + "total_roa", objects: item[entry + '_roa_objects'], label: "ROA"});
                                             });
                                             }
-                                          }
-                                  },
-                                  { view:"resizer" },
-                                  { view:"tabview", id: "stats_tabview", 
-                                    cells: [
+                                        }
+                                },
+                                { view:"resizer" },
+                                { view:"tabview", id: "stats_tabview", css:"browser_object_tabview",
+                                  cells: [
                                       { header: "Total",
                                         body: { view:"chart", type:"pie", id:"stats_pie_chart_total", data: [], value: "#objects#", label: "#label#" }
                                       },
@@ -410,11 +363,9 @@
                                       { header: "Invalid",
                                         body: { view:"chart", type:"pie", id:"stats_pie_chart_invalid", data: [], value: "#objects#", label: "#label#" }
                                       },
-                                    ]
-                                  }
                                   ]
-                              }
-                          ]
+                                }
+                                ]
                         }
                       ]
                     }
