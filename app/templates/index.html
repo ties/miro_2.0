@@ -41,7 +41,11 @@
                                       click:function(){
                                         $$("filter_window").show();
                                       }},
-                                    { view:"button", value:"Clear Filter", width: 90, css:"browser_toolbar_button"},
+                                    { view:"button", value:"Clear Filter", width: 90, css:"browser_toolbar_button",
+                                      click:function(){
+                                        $$("tree_viewer_layout").showBatch("unfiltered_tree_viewer");
+                                      }
+                                    },
                                     { view:"richselect", id:"cert_tree_combo", width: 100, editable: false,  css:"browser_toolbar_richselect",
                                       options: {
                                         css: "browser_toolbar_richselect_list",
@@ -73,21 +77,31 @@
                                         "onChange": function(new_v, old_v) {
                                           var combo = $$("cert_tree_combo");
                                           var tree_item = combo.getList().getItem(new_v);
+                                          var ts_html = '<span class="browser_toolbar_ts_span">' + tree_item['date'] + '</span>';
+                                          $$("browser_toolbar_update_ts").setHTML(ts_html);
                                           $$("tree_viewer").clearAll();
                                           $$("tree_viewer").define("url", "/api/objects/meta/rc/" + tree_item.trust_anchor_name);
                                           $$("tree_viewer").refresh();
 
                                         }
                                       } 
-                                    }
-
+                                    },
+                                    { view:"button", value:"Download", width: 90, css:"browser_toolbar_download_button",
+                                      click:function(){
+                                        var link = "/api/tree/";
+                                        var combo = $$("cert_tree_combo");
+                                        link = link + combo.getValue();
+                                        window.location.href = link;
+                                      }
+                                    },
+                                    { id:"browser_toolbar_update_ts", view: "template", type: "label", css:"browser_toolbar_timestamp"},
                                     ] 
                             },
                             { cols: [
                                     { view:"layout", id:"tree_viewer_layout", visibleBatch: "unfiltered_tree_viewer", batch: "object_browser",
                                       rows: 
                                       [
-                                        { view:"treetable", id:"tree_viewer", select: true, batch:"unfiltered_tree_viewer", header:false, css:"browser_tree_viewer",
+                                        { view:"treetable", id:"tree_viewer", select: true, batch:"unfiltered_tree_viewer", header:false, css:"browser_tree_viewer", 
                                           columns:[{id:'col',template:"{common.treetable()} #value#", fillspace:true} ],
                                           width:300,
                                           on: {
@@ -109,8 +123,8 @@
                                                 }
                                               }
                                         },
-                                        { view:"treetable", id:"f_tree_viewer", select: true, batch:"filtered_tree_viewer", css:"browser_tree_viewer",
-                                          columns:[{id:'col', header:false, template:"{common.treetable()} #value#", fillspace:true} ],
+                                        { view:"treetable", id:"f_tree_viewer", select: true, batch:"filtered_tree_viewer", css:"browser_tree_viewer", header:false, 
+                                          columns:[{id:'col', template:"{common.treetable()} #value#", fillspace:true} ],
                                           width:300, 
                                           on: {
                                             onAfterSelect: function(id) {
@@ -155,6 +169,7 @@
                                                                    { label:"EE Certificate", type:"boolean", id:"isee"},
                                                                    { label:"CA Certificate", type:"boolean", id:"isca"},
                                                                    { label:"Root Certificate", type:"boolean", id:"isroot"},
+                                                                   { label:"Location", type:"text", id:"location"},
                                                                    // { label:"Validation Status", type:"label"},
                                                                    { label:"Validity Period Start", type:"text", id:"validity_period_start"},
                                                                    { label:"Validity Period End", type:"text", id:"validity_period_end"},
@@ -184,6 +199,7 @@
                                                         { view:"property", id:"mft_properties", batch:"cer_batch", nameWidth: 200, editable: false,
                                                           elements:[
                                                                    { label:"Filename", type:"text", id:"manifest_name"},
+                                                                   { label:"Location", type:"text", id:"location"},
                                                                    { label:"Validity Period Start", type:"text", id:"validity_period_start"},
                                                                    { label:"Validity Period End", type:"text", id:"validity_period_end"},
                                                                    { label:"Validation Status", type:"text", id:"validation_status"},
@@ -198,7 +214,7 @@
                                                         { view: "template", template: "Issued Files", type: "header", css:"browser_object_properties_header"},
                                                         { view:"datatable", batch:"cer_batch", id:"manifest_table",
                                                           columns:[
-                                                            {id:"filename", header:"Filename", width:150},
+                                                            {id:"filename", header:"Filename", width:150, fillspace:true},
                                                             {id:"hash", header:"Hash", width:250}
                                                           ]
                                                         }
@@ -217,8 +233,7 @@
                                                         { view:"property", id:"crl_properties", batch:"cer_batch", nameWidth: 200, editable: false,
                                                           elements:[
                                                                    { label:"Filename", type:"text", id:"crl_name"},
-                                                                   { label:"Validity Period Start", type:"text", id:"validity_period_start"},
-                                                                   { label:"Validity Period End", type:"text", id:"validity_period_end"},
+                                                                   { label:"Location", type:"text", id:"location"},
                                                                    { label:"Validation Status", type:"text", id:"validation_status"},
                                                                    { label:"Validation Errors", type:"text", id:"validation_errors"},
                                                                    { label:"Validation Warnings", type:"text", id:"validation_warnings"},
@@ -231,7 +246,7 @@
                                                         { view: "template", template: "Revoked Files", type: "header", css:"browser_object_properties_header"},
                                                         { view:"datatable", batch:"cer_batch", id:"crl_table",
                                                           columns:[
-                                                            {id:"serial_nr", header:"Serial Number", width:100},
+                                                            {id:"serial_nr", header:"Serial Number", width:100, fillspace:true},
                                                             {id:"revoke_time", header:"Revocation Time", width: 200}
                                                           ]
                                                         }
@@ -256,6 +271,7 @@
                                                                  { label:"Filename", type:"text", id:"roa_name"},
                                                                  { label:"ASN", type:"int", id:"asn"},
                                                                  { label:"Signing Time", type:"text", id:"signing_time"},
+                                                                 { label:"Location", type:"text", id:"location"},
                                                                  { label:"Validity Period Start", type:"text", id:"validity_period_start"},
                                                                  { label:"Validity Period End", type:"text", id:"validity_period_end"},
                                                                  { label:"Validation Status", type:"text", id:"validation_status"},
@@ -286,7 +302,7 @@
                                                     { view:"layout", 
                                                       rows: [
                                                         { view: "template", template: "General Information", type: "header", css:"browser_object_properties_header"},
-                                                        { view:"property", id:"ee_cer_properties", batch:"roa_batch", nameWidth: 200, editable: false,
+                                                        { view:"property", id:"ee_cer_properties", batch:"roa_batch", nameWidth: 200, editable: false, fixedRowHeight:false,
                                                           elements:[
                                                                    { label:"Subject", type:"text", id:"subject"},
                                                                    { label:"Issuer", type:"text", id:"issuer"},
@@ -331,7 +347,7 @@
                                     ready: function(){
                                       webix.ajax("/api/stats/all", {
                                         error:function(text, data, XmlHttpRequest) {
-                                          console.log("WAT");
+                                          alert(text);
                                         },
                                         success:function(text, data, XmlHttpRequest) {
                                           var stats = data.json();
@@ -369,13 +385,16 @@
                                 { view:"tabview", id: "stats_tabview", css:"browser_object_tabview",
                                   cells: [
                                       { header: "Total",
-                                        body: { view:"chart", type:"pie", id:"stats_pie_chart_total", data: [], value: "#objects#", label: "#label#" }
+                                        body: { view:"chart", type:"pie", id:"stats_pie_chart_total", data: [], value: "#objects#", label: "#label#",pieInnerText: "#objects#",
+                                                radius:200}
                                       },
                                       { header: "Valid",
-                                        body: { view:"chart", type:"pie", id:"stats_pie_chart_valid", data: [], value: "#objects#", label: "#label#" }
+                                        body: { view:"chart", type:"pie", id:"stats_pie_chart_valid", data: [], value: "#objects#", label: "#label#",pieInnerText: "#objects#",
+                                                radius:200}
                                       },
                                       { header: "Invalid",
-                                        body: { view:"chart", type:"pie", id:"stats_pie_chart_invalid", data: [], value: "#objects#", label: "#label#" }
+                                        body: { view:"chart", type:"pie", id:"stats_pie_chart_invalid", data: [], value: "#objects#", label: "#label#", 
+                                                radius:200, pieInnerText: "#objects#"}
                                       },
                                   ]
                                 }
@@ -404,7 +423,8 @@
                               {"id" : "subject", "value": "Subject"},
                               {"id" : "issuer", "value": "Issuer"},
                               {"id" : "serial_nr", "value": "Serial Nr."},
-                              {"id" : "resource", "value": "Resource"}
+                              {"id" : "resource", "value": "Resource"},
+                              {"id" : "location", "value": "Location"}
                             ]
                           },
                           { "id": "filter_value_text", view: "text", label: "Search for:", name: "search_for" },
@@ -455,7 +475,8 @@
                           { view: "button", value: "Clear", 
                             click:function(){
                               $$("tree_viewer_layout").showBatch("unfiltered_tree_viewer");
-                          }}
+                            }
+                          }
                         ]
                       }
               });

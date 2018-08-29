@@ -49,6 +49,7 @@
                         });
                     }
                     $$("ee_cer_properties").setValues(content);
+                    $$("ee_cer_properties").adjustRowHeight();
                	}
                })
            }

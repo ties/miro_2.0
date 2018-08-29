@@ -27,7 +27,10 @@
 	background: #272727 ;
 }
 
-
+.browser_toolbar_download_button button:active {
+	background: #272727 ;
+	border: 1px solid white;
+}
 
 
 
@@ -37,11 +40,12 @@
 }
 
 .browser_toolbar_richselect_list .webix_list_item.webix_selected {
-	background-color: #000000 !important;
+	background-color: #333333 !important;
+	border:1px solid white;
 }
 
 .browser_toolbar_richselect_list {
-	background-color: #000000 !important;
+	background-color: #333333 !important;
 	color: red !important;
 }
 
@@ -117,10 +121,13 @@
 	padding:0px;
 }
 
-
-
-
-
+.browser_toolbar_timestamp {
+	background-color: #333333;
+	color: #FFFFFF;
+	border:none;
+	text-align:right;
+	line-height:25px;
+}
 
 
 
