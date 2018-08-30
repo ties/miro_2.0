@@ -1,0 +1,15 @@
+[Unit]
+Description = MIRO Browser
+After = network.target
+Wants = nginx.service
+
+[Service]
+PermissionsStartOnly = true
+User = miro
+Group = miro
+WorkingDirectory = /opt/miro_browser
+ExecStart = /opt/miro_browser/startsite.sh
+StandardOutput=journal+console
+
+[Install]
+WantedBy = multi-user.target
