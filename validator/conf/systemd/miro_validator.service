@@ -1,0 +1,15 @@
+[Unit]
+Description=MIRO Validator
+Requires=postgresql.service
+[Service]
+User=miro
+Type=simple
+StandardOutput=syslog
+SyslogIdentifier=miro_validator
+ExecStart=/usr/lib/jvm/java-8-oracle/bin/java -jar /opt/miro_validator/miro_validator.jar /etc/miro/miro.conf
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

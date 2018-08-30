@@ -1,0 +1,13 @@
+[Unit]
+Description=Runs MIRO Validator periodiocally 
+Requires=miro_validator.service
+
+[Timer]
+# Time to wait after booting before we run first time
+OnBootSec=30sec
+# Time between running each consecutive time
+OnUnitActiveSec=2h
+Unit=miro_validator.service
+
+[Install]
+WantedBy=multi-user.target
