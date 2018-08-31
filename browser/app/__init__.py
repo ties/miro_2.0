@@ -6,6 +6,7 @@ from sqlalchemy.sql import operators
 from IPy import IP
 import json
 import os.path
+from collections import defaultdict
 #from app.data_api import data_api
 #from app.analysis_api import analysis_api
 #from app.util import DateConverter
@@ -124,6 +125,48 @@ def create_app(config_name):
     @app.route('/api/filter/', methods = ['POST'])
     def filter_objects():
         content = request.get_json()
+        filter_attr = content['filter_attribute']
+        filter_value = content['filter_value']
+        file_type = content['file_type']
+        cert_tree = content['tree_name']
+        incl_valids = content['include_valids']
+        incl_warnings = content['include_warnings']
+        incl_errors = content['include_errors']
+        results = []
+        matching_roa_parents = []
+        parent_id_map = defaultdict(list)
+
+        if file_type == "roa" or file_type == "all":
+            # Get all matching ROAs, and their parent_ids
+            sql_query = make_roa_query(filter_attr, filter_value, cert_tree)
+
+            query_results = db_session.execute(sql_query)
+            [results.append({'id':rc[0], 'value':rc[1], 'icon':rc[2].lower(), 'parent':rc[3]}) for rc in query_results]
+            matching_roa_parents = [rc['parent'] for rc in results]
+
+        sql_query = make_recursive_cer_query(filter_attr, filter_value, matching_roa_parents, cert_tree)
+        query_results = db_session.execute(sql_query)
+        [results.append({'id':rc[0], 'value':rc[1], 'mft_name':rc[2], 'crl_name':rc[3], 'icon':rc[4].lower(), 'parent':rc[5]}) for rc in query_results]
+
+        for rc in results:
+            parent_id_map[rc['parent']].append(rc)
+
+        # Trust Anchor has parent None
+        trust_anchor = parent_id_map[None].pop()
+        trust_anchor['parent'] = 0
+        queue = [trust_anchor]
+        while queue != []:
+            cert = queue.pop()
+            kids = parent_id_map[cert['id']]
+            cert['data'] = kids
+            for kid in kids:
+                if 'crl_name' in kid:
+                    queue.append(kid)
+        return jsonify([trust_anchor])
+
+    #@app.route('/api/filter/', methods = ['POST'])
+    def o_filter_objects():
+        content = request.get_json()
         
         filter_attr = content['filter_attribute']
         filter_value = content['filter_value']
@@ -133,7 +176,6 @@ def create_app(config_name):
         incl_warnings = content['include_warnings']
         incl_errors = content['include_errors']
         results = []
-        print(content)
         
         if file_type == "cer" or file_type == "all":
             query = db_session.query(ResourceCertificate.id, ResourceCertificate.certificate_name, ResourceCertificate.manifest, ResourceCertificate.crl, ResourceCertificate.validation_status).filter(ResourceCertificate.certificate_tree == cert_tree)
@@ -239,6 +281,8 @@ def create_app(config_name):
                     sql_query += ");"
                     query = db_session.execute(sql_query)
                     [results.append({'id':rc[0], 'value':rc[1], 'icon':rc[2].lower()}) for rc in query]
+
+        # Create hiearchy?
         return jsonify(results)
 
 
@@ -248,4 +292,84 @@ def create_app(config_name):
 
     return app
 
+
+def make_recursive_cer_query(attribute, value, roa_parents, tree):
+    op_str = ""
+    if attribute in ['filename', 'location', 'subject', 'issuer']:
+        if attribute == 'filename':
+            attribute = 'certificate_name'
+        op_str = "{0} LIKE '%{1}%'".format(attribute, value)
+    if attribute == 'serial_nr':
+        op_str = "{0}={1}".format(attribute, value)
+    if attribute == 'resource':
+        if is_asn(value):
+            op_str = "{0}::int8 <@ ANY (asn_ranges) OR {0} =ANY(asns)".format(value)
+        elif is_ip(value):
+            op_str = "'{0}'::inet <<= ANY (prefixes) ".format(value)
+        else:
+            pass
+
+    sql_query = "WITH RECURSIVE top_level AS "
+    sql_query += "("
+    sql_query += "SELECT id, certificate_name, manifest, crl, validation_status, parent_id "
+    sql_query += "FROM resource_certificate WHERE certificate_tree = '{0}' AND ( ".format(tree, op_str)
+    if roa_parents:
+        sql_query += "id IN " + str(roa_parents).replace('[','(').replace(']',')') + " OR "
+    sql_query += op_str + ")"
+    sql_query += "UNION "
+    sql_query += "SELECT resource_certificate.id, resource_certificate.certificate_name, "
+    sql_query += "resource_certificate.manifest, "
+    sql_query += "resource_certificate.crl, resource_certificate.validation_status, "
+    sql_query += "resource_certificate.parent_id "
+    sql_query += "FROM resource_certificate "
+    sql_query += "JOIN top_level ON (resource_certificate.id = top_level.parent_id)"
+    sql_query += ")"
+    sql_query += "SELECT id, certificate_name, manifest, crl, validation_status, parent_id FROM top_level;"
+    
+    return sql_query
+
+def make_roa_query(filter_attribute, value, cert_tree):
+    op_str = ""
+
+    if filter_attribute in ['filename', 'location']:
+        if filter_attribute == 'filename':
+            filter_attribute = 'roa_name'
+        op_str = "{0} LIKE '%{1}%'".format(filter_attribute, value)
+
+        sql_query = "SELECT id, roa_name, validation_status, parent_id FROM roa WHERE "
+        sql_query += "({0}".format(op_str)
+        sql_query += "AND certificate_tree='{0}');".format(cert_tree)
+        return sql_query
+   
+    if filter_attribute in ['subject', 'issuer']:
+        op_str = "{0} LIKE '%{1}%'".format(filter_attribute, value)
+
+        # issuer is place-holder for validation status, since that isn't contained in EE
+        sql_query = "SELECT roa_id, roa_container, issuer, parent_id FROM roa_resource_certificate WHERE "
+        sql_query += "({0}".format(op_str)
+        sql_query += "AND certificate_tree='{0}');".format(cert_tree)
+        return sql_query
+
+    if filter_attribute == 'serial_nr':
+        op_str = "{0}={1}".format(filter_attribute, value)
+
+        # issuer is place-holder for validation status, since that isn't contained in EE
+        sql_query = "SELECT roa_id, roa_container, issuer, parent_id FROM roa_resource_certificate WHERE "
+        sql_query += "({0}".format(op_str)
+        sql_query += "AND certificate_tree='{0}');".format(cert_tree)
+        return sql_query
+
+    if filter_attribute == 'resource':
+        if is_asn(value):
+            op_str = "asn={1}".format(value)
+        elif is_ip(value):
+            op_str = "'{0}'::inet <@ ANY (prefixes) ".format(value)
+        else:
+            pass
+        sql_query = "SELECT id, roa_name, validation_status, parent_id FROM roa WHERE "
+        sql_query += "("
+        sql_query += "{0}".format(op_str)
+        sql_query += "AND certificate_tree='{0}');".format(cert_tree)
+        return sql_query
+        
 

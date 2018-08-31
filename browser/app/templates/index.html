@@ -16,18 +16,22 @@
                     { template:"Nav Bar", view:"toolbar", id:"navbar_id", height: 70, 
                       elements: 
                             [
-                            { view: "label", label: "RPKI MIRO", width: 100},
-                            { view:"button", type:"htmlbutton", css:"navbar_button", width: 70, 
-                              label: '<span class="text">Browser</span>', 
+                            { view: "label", label: "<strong>RPKI Repository Browser</strong>", width: 210, css:"navbar_header "},
+                            { view:"button", width:120, type:"htmlbutton", css:"navbar_button", 
+                              label: '<span class="text"><strong>RPKI Browser</strong></span>', 
                               click: function(){
                                 $$("browser_stats_layout").showBatch("object_browser");
                               }
                             },
-                            { view:"button", width: 70, type:"htmlbutton", css:"navbar_button",
-                              label: '<span class="text">Stats</span>', 
+                            { view:"button", width:120, type:"htmlbutton", css:"navbar_button",
+                              label: '<span class="text"><strong>Statistics</strong></span>', 
                               click: function() {
                                 $$("browser_stats_layout").showBatch("stats");
-                              }}
+                              }
+                            },
+                            { view:"button", width:100, type:"htmlbutton", css:"navbar_button",
+                              label: '<a style="text-decoration:none;" href="http://rpki-miro.realmv6.org/"><span class="text"><strong>About</strong></span></a>'
+                            }
                             ],
                     },
                     { view:"layout", id:"browser_stats_layout", visibleBatch: "object_browser",

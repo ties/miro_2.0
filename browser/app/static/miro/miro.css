@@ -3,13 +3,22 @@
 
 .navbar_button button {
 	border: none !important;
+	border-radius: 0px !important;
+	/*margin-left: 10px;*/
 }
 
 
 .navbar_button .text {
 	color: white;
+	text-decoration: none !important;
 }
 
+
+
+.webix_el_label.navbar_header {
+	border: none !important;
+
+}
 
 
 
