@@ -76,7 +76,8 @@ CREATE TABLE roa_resource_certificate (
     certificate_tree text NOT NULL,
     id bigint,
     parent_id bigint,
-    roa_container text PRIMARY KEY
+    roa_container text PRIMARY KEY,
+    roa_id bigint
 );
 CREATE TABLE roa (
     roa_name text PRIMARY KEY,
