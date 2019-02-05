@@ -1,7 +1,10 @@
+![build status](https://travis-ci.org/rpki-miro/miro_2.0.svg?branch=master)
+
+
 MIRO is designed to run using systemd services. We recommend Ubuntu 18.04.
 
 
-How to Install:
+## How to Install:
 
 Make sure postgres and nginx are installed:
 ```
