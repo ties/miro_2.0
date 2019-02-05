@@ -1,11 +1,11 @@
 from calendar import timegm
-from werkzeug.routing import BaseConverter
 import datetime
+from werkzeug.routing import BaseConverter
 
 
 def get_start_and_end_of_day(date):
     start_of_day = timegm(date.timetuple())
-    end_of_day = start_of_day + 60*60*24
+    end_of_day = start_of_day + 60 * 60 * 24
     return start_of_day, end_of_day
 
 

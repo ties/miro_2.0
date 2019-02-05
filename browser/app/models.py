@@ -1,4 +1,5 @@
 from collections import OrderedDict
+
 from app.database import Base
 
 
@@ -8,7 +9,7 @@ class ResourceCertificate(Base):
     def asdict(self):
         result = OrderedDict()
         for key in self.__mapper__.c.keys():
-            if getattr(self, key) == None:
+            if getattr(self, key) is None:
                 result[key] = "None"
             else:
                 if key == "asn_ranges":
@@ -16,7 +17,7 @@ class ResourceCertificate(Base):
                     if hurr:
                         rngs = []
                         for num_range in hurr:
-                            d = {'lower':num_range.lower, 'upper':num_range.upper}
+                            d = {'lower': num_range.lower, 'upper': num_range.upper}
                             rngs.append(d)
                         result[key] = rngs
                 elif key == "serial_nr":
@@ -32,7 +33,7 @@ class Roa(Base):
     def asdict(self):
         result = OrderedDict()
         for key in self.__mapper__.c.keys():
-            if getattr(self, key) == None:
+            if getattr(self, key) is None:
                 result[key] = "None"
             else:
                 result[key] = getattr(self, key)
@@ -40,24 +41,24 @@ class Roa(Base):
             if key == 'prefixes':
                 new = []
                 res = result[key]
-                res = res.replace('"', '').replace('{','').replace('}','')
-                res = res.replace('(', '').replace(')','')
+                res = res.replace('"', '').replace('{', '').replace('}', '')
+                res = res.replace('(', '').replace(')', '')
                 i = 0
                 res = res.split(',')
                 while i < len(res):
-                    new.append(res[i]+'_'+res[i+1])
+                    new.append(res[i] + '_' + res[i + 1])
                     i += 2
                 result['prefixes'] = new
-        #result['day'] = result['day'].strftime('%Y-%m-%d')
+        # result['day'] = result['day'].strftime('%Y-%m-%d')
         return result
 
 class RoaResourceCertificate(Base):
-    __tablename__= 'roa_resource_certificate'
+    __tablename__ = 'roa_resource_certificate'
 
     def asdict(self):
         result = OrderedDict()
         for key in self.__mapper__.c.keys():
-            if getattr(self, key) == None:
+            if getattr(self, key) is None:
                 result[key] = "None"
             else:
                 if key == "asn_ranges":
@@ -65,7 +66,7 @@ class RoaResourceCertificate(Base):
                     if hurr:
                         rngs = []
                         for num_range in hurr:
-                            d = {'lower':num_range.lower, 'upper':num_range.upper}
+                            d = {'lower': num_range.lower, 'upper': num_range.upper}
                             rngs.append(d)
                         result[key] = rngs
                 elif key == "serial_nr":
@@ -80,7 +81,7 @@ class Manifest(Base):
     def asdict(self):
         result = OrderedDict()
         for key in self.__mapper__.c.keys():
-            if getattr(self, key) == None:
+            if getattr(self, key) is None:
                 result[key] = "None"
             else:
                 result[key] = getattr(self, key)
@@ -93,7 +94,7 @@ class Crl(Base):
     def asdict(self):
         result = OrderedDict()
         for key in self.__mapper__.c.keys():
-            if getattr(self, key) == None:
+            if getattr(self, key) is None:
                 result[key] = "None"
             else:
                 result[key] = getattr(self, key)
