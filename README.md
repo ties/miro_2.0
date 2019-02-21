@@ -1,4 +1,4 @@
-![build status](https://travis-ci.org/rpki-miro/miro_2.0.svg?branch=master)
+[![Build status](https://travis-ci.org/rpki-miro/miro_2.0.svg?branch=master)](https://travis-ci.org/rpki-miro/miro_2.0)
 
 
 MIRO is designed to run using systemd services. We recommend Ubuntu 18.04.
