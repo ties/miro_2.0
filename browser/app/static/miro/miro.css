@@ -140,4 +140,16 @@
 
 
 
+.webix_property_label {
+	border-right: 0;
+}
+
+.webix_property_value {
+	white-space: normal;
+}
+
+.webix_property_label, .webix_property_value {
+    border-bottom: 0;
+	height: initial;
+}
 
