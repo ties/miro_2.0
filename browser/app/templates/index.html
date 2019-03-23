@@ -44,78 +44,78 @@
                     ],
                 },
                 {
+                    template: "Tool Bar", view: "toolbar", id: "toolbar_id", batch: "object_browser", css: "browser_toolbar",
+                    elements: [
+                        {
+                            view: "button", value: "Filter", width: 70, css: "browser_toolbar_button",
+                            click: function () {
+                                $$("filter_window").show();
+                            }
+                        },
+                        {
+                            view: "button", value: "Clear Filter", width: 90, css: "browser_toolbar_button",
+                            click: function () {
+                                $$("tree_viewer_layout").showBatch("unfiltered_tree_viewer");
+                            }
+                        },
+                        {
+                            view: "richselect", id: "cert_tree_combo", width: 100, editable: false, css: "browser_toolbar_richselect",
+                            options: {
+                                css: "browser_toolbar_richselect_list",
+                                body: {
+                                    template: "#tree_name#",
+                                    data: []
+                                }
+                            },
+                            on:
+                            {
+                                "onAfterRender": function () {
+                                    webix.ajax("/api/objects/ct/all", {
+                                        error: function (text, data, XmlHttpRequest) {
+                                            alert(text);
+                                        },
+                                        success: function (text, data, XmlHttpRequest) {
+                                            var trees = data.json();
+                                            var combo = $$("cert_tree_combo");
+                                            var new_options = [];
+                                            trees.forEach(function (entry) {
+                                                entry['id'] = entry['tree_name']
+                                                new_options.push(entry);
+                                            });
+                                            combo.getList().parse(new_options);
+                                            combo.setValue(new_options[0].id);
+                                        }
+                                    });
+                                },
+                                "onChange": function (new_v, old_v) {
+                                    var combo = $$("cert_tree_combo");
+                                    var tree_item = combo.getList().getItem(new_v);
+                                    var ts_html = '<span class="browser_toolbar_ts_span">' + tree_item['date'] + '</span>';
+                                    $$("browser_toolbar_update_ts").setHTML(ts_html);
+                                    $$("tree_viewer").clearAll();
+                                    $$("tree_viewer").define("url", "/api/objects/meta/rc/" + tree_item.trust_anchor_name);
+                                    $$("tree_viewer").refresh();
+                                }
+                            }
+                        },
+                        {
+                            view: "button", value: "Download", width: 90, css: "browser_toolbar_download_button",
+                            click: function () {
+                                var link = "/api/tree/";
+                                var combo = $$("cert_tree_combo");
+                                link = link + combo.getValue();
+                                window.location.href = link;
+                            }
+                        },
+                        { id: "browser_toolbar_update_ts", view: "template", type: "label", css: "browser_toolbar_timestamp" },
+                    ]
+                },
+                {
                     view: "layout", id: "browser_stats_layout", visibleBatch: "object_browser",
                     rows: [
                         {
                             view: "layout", id: "browser_layout", batch: "object_browser",
                             rows: [
-                                {
-                                    template: "Tool Bar", view: "toolbar", id: "toolbar_id", batch: "object_browser", css: "browser_toolbar",
-                                    elements: [
-                                        {
-                                            view: "button", value: "Filter", width: 70, css: "browser_toolbar_button",
-                                            click: function () {
-                                                $$("filter_window").show();
-                                            }
-                                        },
-                                        {
-                                            view: "button", value: "Clear Filter", width: 90, css: "browser_toolbar_button",
-                                            click: function () {
-                                                $$("tree_viewer_layout").showBatch("unfiltered_tree_viewer");
-                                            }
-                                        },
-                                        {
-                                            view: "richselect", id: "cert_tree_combo", width: 100, editable: false, css: "browser_toolbar_richselect",
-                                            options: {
-                                                css: "browser_toolbar_richselect_list",
-                                                body: {
-                                                    template: "#tree_name#",
-                                                    data: []
-                                                }
-                                            },
-                                            on:
-                                            {
-                                                "onAfterRender": function () {
-                                                    webix.ajax("/api/objects/ct/all", {
-                                                        error: function (text, data, XmlHttpRequest) {
-                                                            alert(text);
-                                                        },
-                                                        success: function (text, data, XmlHttpRequest) {
-                                                            var trees = data.json();
-                                                            var combo = $$("cert_tree_combo");
-                                                            var new_options = [];
-                                                            trees.forEach(function (entry) {
-                                                                entry['id'] = entry['tree_name']
-                                                                new_options.push(entry);
-                                                            });
-                                                            combo.getList().parse(new_options);
-                                                            combo.setValue(new_options[0].id);
-                                                        }
-                                                    });
-                                                },
-                                                "onChange": function (new_v, old_v) {
-                                                    var combo = $$("cert_tree_combo");
-                                                    var tree_item = combo.getList().getItem(new_v);
-                                                    var ts_html = '<span class="browser_toolbar_ts_span">' + tree_item['date'] + '</span>';
-                                                    $$("browser_toolbar_update_ts").setHTML(ts_html);
-                                                    $$("tree_viewer").clearAll();
-                                                    $$("tree_viewer").define("url", "/api/objects/meta/rc/" + tree_item.trust_anchor_name);
-                                                    $$("tree_viewer").refresh();
-                                                }
-                                            }
-                                        },
-                                        {
-                                            view: "button", value: "Download", width: 90, css: "browser_toolbar_download_button",
-                                            click: function () {
-                                                var link = "/api/tree/";
-                                                var combo = $$("cert_tree_combo");
-                                                link = link + combo.getValue();
-                                                window.location.href = link;
-                                            }
-                                        },
-                                        { id: "browser_toolbar_update_ts", view: "template", type: "label", css: "browser_toolbar_timestamp" },
-                                    ]
-                                },
                                 {
                                     cols: [
                                         {
