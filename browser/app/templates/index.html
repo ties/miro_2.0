@@ -170,43 +170,51 @@
                                                             body:
                                                             {
                                                                 view: "layout", id: "certificate_layout", batch: "cer_batch",
-                                                                cols: [
-                                                                    {
-                                                                        view: "layout",
-                                                                        rows: [
-                                                                            { view: "template", template: "General Information", type: "header", css: "browser_object_properties_header" },
-                                                                            {
-                                                                                view: "property", id: "cer_properties", batch: "cer_batch", nameWidth: 200, editable: false,
-                                                                                elements: [
-                                                                                    { label: "<span style='font-weight: bold'>Filename</span>", type: "text", id: "certificate_name" },
-                                                                                    { label: "<span style='font-weight: bold'>Subject</span>", type: "text", id: "subject" },
-                                                                                    { label: "<span style='font-weight: bold'>Issuer</span>", type: "text", id: "issuer" },
-                                                                                    { label: "<span style='font-weight: bold'>Serial Nr.</span>", type: "int", id: "serial_nr" },
-                                                                                    { label: "<span style='font-weight: bold'>Subject Key Identifier</span>", type: "text", id: "subject_key_identifier" },
-                                                                                    { label: "<span style='font-weight: bold'>Authority Key Identifier</span>", type: "text", id: "authority_key_identifier" },
-                                                                                    { label: "<span style='font-weight: bold'>Public Key</span>", type: "text", id: "public_key" },
-                                                                                    { label: "<span style='font-weight: bold'>EE Certificate</span>", type: "boolean", id: "isee" },
-                                                                                    { label: "<span style='font-weight: bold'>CA Certificate</span>", type: "boolean", id: "isca" },
-                                                                                    { label: "<span style='font-weight: bold'>Root Certificate</span>", type: "boolean", id: "isroot" },
-                                                                                    { label: "<span style='font-weight: bold'>Location</span>", type: "text", id: "location" },
-                                                                                    // { label: "<span style='font-weight: bold'>Validation Status</span>", type:"label"},
-                                                                                    { label: "<span style='font-weight: bold'>Validity Period Start</span>", type: "text", id: "validity_period_start" },
-                                                                                    { label: "<span style='font-weight: bold'>Validity Period End</span>", type: "text", id: "validity_period_end" },
-                                                                                    { label: "<span style='font-weight: bold'>Validation Status</span>", type: "text", id: "validation_status" },
-                                                                                    { label: "<span style='font-weight: bold'>Validation Errors</span>", type: "text", id: "validation_errors" },
-                                                                                    { label: "<span style='font-weight: bold'>Validation Warnings</span>", type: "text", id: "validation_warnings" },
-                                                                                ]
-                                                                            }
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        view: "layout",
-                                                                        rows: [
-                                                                            { view: "template", template: "Resources", type: "header", css: "browser_object_properties_header" },
-                                                                            { view: "list", template: "#resource#", batch: "cer_batch", id: "cer_resource_list" }
-                                                                        ]
-                                                                    }
-                                                                ]
+                                                                id: "parent_cert",
+                                                                rows: [{
+                                                                    responsive: "parent_cert",
+																//	view: "flexlayout",
+                                                                    cols: [
+                                                                        {
+                                                                            width: 500,
+                                                                            //view: "layout",
+                                                                            rows: [
+                                                                                { view: "template", template: "General Information", type: "header", css: "browser_object_properties_header" },
+                                                                                {
+                                                                                    view: "property", id: "cer_properties", batch: "cer_batch", nameWidth: 200, editable: false,
+																					scroll:true,
+                                                                                    elements: [
+                                                                                        { label: "<span style='font-weight: bold'>Filename</span>", type: "text", id: "certificate_name" },
+                                                                                        { label: "<span style='font-weight: bold'>Subject</span>", type: "text", id: "subject" },
+                                                                                        { label: "<span style='font-weight: bold'>Issuer</span>", type: "text", id: "issuer" },
+                                                                                        { label: "<span style='font-weight: bold'>Serial Nr.</span>", type: "int", id: "serial_nr" },
+                                                                                        { label: "<span style='font-weight: bold'>Subject Key Identifier</span>", type: "text", id: "subject_key_identifier" },
+                                                                                        { label: "<span style='font-weight: bold'>Authority Key Identifier</span>", type: "text", id: "authority_key_identifier" },
+                                                                                        { label: "<span style='font-weight: bold'>Public Key</span>", type: "text", id: "public_key" },
+                                                                                        { label: "<span style='font-weight: bold'>EE Certificate</span>", type: "boolean", id: "isee" },
+                                                                                        { label: "<span style='font-weight: bold'>CA Certificate</span>", type: "boolean", id: "isca" },
+                                                                                        { label: "<span style='font-weight: bold'>Root Certificate</span>", type: "boolean", id: "isroot" },
+                                                                                        { label: "<span style='font-weight: bold'>Location</span>", type: "text", id: "location" },
+                                                                                        // { label: "<span style='font-weight: bold'>Validation Status</span>", type:"label"},
+                                                                                        { label: "<span style='font-weight: bold'>Validity Period Start</span>", type: "text", id: "validity_period_start" },
+                                                                                        { label: "<span style='font-weight: bold'>Validity Period End</span>", type: "text", id: "validity_period_end" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Status</span>", type: "text", id: "validation_status" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Errors</span>", type: "text", id: "validation_errors" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Warnings</span>", type: "text", id: "validation_warnings" },
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            //width: 500,
+                                                                            //view: "layout",
+                                                                            rows: [
+                                                                                { view: "template", template: "Resources", type: "header", css: "browser_object_properties_header" },
+                                                                                { view: "list", template: "#resource#", batch: "cer_batch", id: "cer_resource_list" }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }]
                                                             }
                                                         },
                                                         {
