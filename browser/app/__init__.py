@@ -64,6 +64,10 @@ def create_app(config_name):
     def show_index():
         return render_template("index.html")
 
+    @app.route("/statistics")
+    def show_statistics():
+        return render_template("statistics.html")
+
     @app.route("/api/objects/meta/rc/children/<parent_id>")
     def get_rc_children_meta(parent_id):
         rc = (

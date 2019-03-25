@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href={{ url_for('static', filename='webix/webix.css') }} type="text/css" charset="utf-8">
+    <link rel="stylesheet" href={{ url_for('static', filename='miro/miro.css') }} type="text/css" charset="utf-8">
+    <script src={{ url_for('static', filename='webix/webix.js') }} type="text/javascript" charset="utf-8"></script>
+    <script src={{ url_for('static', filename='miro/miro.js') }} type="text/javascript" charset="utf-8"></script>
+</head>
+
+<body>
+    <script type="text/javascript" charset="utf-8">
+
+        webix.ui({
+            type: "line",
+            rows: [
+                {
+                    template: "Nav Bar", view: "toolbar", id: "navbar_id", height: 70,
+                    elements: [
+                        {
+                            view: "label",
+                            label: "<strong>RPKI Repository Browser</strong>",
+                            width: 210,
+                            css: "navbar_header "
+                        },
+                        {
+                            view: "button", width: 120, type: "htmlbutton", css: "navbar_button",
+                            label: '<a style="text-decoration:none;" href="/"><span class="text"><strong>RPKI Browser</strong></span></a>'
+                        },
+                        {
+                            view: "button", width: 120, type: "htmlbutton", css: "navbar_button",
+                            label: '<a style="text-decoration:none;" href="statistics"><span class="text"><strong>Statistics</strong></span></a>'
+                        },
+                        {
+                            view: "button", width: 100, type: "htmlbutton", css: "navbar_button",
+                            label: '<a style="text-decoration:none;" href="http://rpki-miro.realmv6.org/"><span class="text"><strong>About</strong></span></a>'
+                        }
+                    ],
+                },
+                {
+                    template: "Tool Bar", view: "toolbar", id: "toolbar_id", batch: "object_browser", css: "browser_toolbar",
+                    elements: [
+                        {
+                            view: "button", value: "Filter", width: 70, css: "browser_toolbar_button",
+                            click: function () {
+                                $$("filter_window").show();
+                            }
+                        },
+                        {
+                            view: "button", value: "Clear Filter", width: 90, css: "browser_toolbar_button",
+                            click: function () {
+                                $$("tree_viewer_layout").showBatch("unfiltered_tree_viewer");
+                            }
+                        },
+                        {
+                            view: "richselect", id: "cert_tree_combo", width: 100, editable: false, css: "browser_toolbar_richselect",
+                            options: {
+                                css: "browser_toolbar_richselect_list",
+                                body: {
+                                    template: "#tree_name#",
+                                    data: []
+                                }
+                            },
+                            on:
+                            {
+                                "onAfterRender": function () {
+                                    webix.ajax("/api/objects/ct/all", {
+                                        error: function (text, data, XmlHttpRequest) {
+                                            alert(text);
+                                        },
+                                        success: function (text, data, XmlHttpRequest) {
+                                            var trees = data.json();
+                                            var combo = $$("cert_tree_combo");
+                                            var new_options = [];
+                                            trees.forEach(function (entry) {
+                                                entry['id'] = entry['tree_name']
+                                                new_options.push(entry);
+                                            });
+                                            combo.getList().parse(new_options);
+                                            combo.setValue(new_options[0].id);
+                                        }
+                                    });
+                                },
+                                "onChange": function (new_v, old_v) {
+                                    var combo = $$("cert_tree_combo");
+                                    var tree_item = combo.getList().getItem(new_v);
+                                    var ts_html = '<span class="browser_toolbar_ts_span">' + tree_item['date'] + '</span>';
+                                    $$("browser_toolbar_update_ts").setHTML(ts_html);
+                                    $$("tree_viewer").clearAll();
+                                    $$("tree_viewer").define("url", "/api/objects/meta/rc/" + tree_item.trust_anchor_name);
+                                    $$("tree_viewer").refresh();
+                                }
+                            }
+                        },
+                        {
+                            view: "button", value: "Download", width: 90, css: "browser_toolbar_download_button",
+                            click: function () {
+                                var link = "/api/tree/";
+                                var combo = $$("cert_tree_combo");
+                                link = link + combo.getValue();
+                                window.location.href = link;
+                            }
+                        },
+                        { id: "browser_toolbar_update_ts", view: "template", type: "label", css: "browser_toolbar_timestamp" },
+                    ]
+                },
+                {
+                    view: "layout", id: "browser_stats_layout", visibleBatch: "object_browser",
+                    rows: [
+                        {
+                            view: "layout", id: "browser_layout", batch: "object_browser",
+                            rows: [
+                                {
+                                    cols: [
+                                        {
+                                            view: "layout", id: "stats_tabview", batch: "stats",
+                                            cols: [
+                                                {
+                                                    view: "treetable", id: "stats_tree_viewer", select: true, data: [], css: "browser_tree_viewer", header: false,
+                                                    columns: [{ id: 'stats_col', header: false, template: "{common.treetable()} #certificate_tree#", fillspace: true }],
+                                                    width: 300,
+                                                    ready: function () {
+                                                        webix.ajax("/api/stats/all", {
+                                                            error: function (text, data, XmlHttpRequest) {
+                                                                alert(text);
+                                                            },
+                                                            success: function (text, data, XmlHttpRequest) {
+                                                                var stats = data.json();
+                                                                var global_rpki;
+                                                                stats.forEach(function (entry) {
+                                                                    entry['id'] = entry['certificate_tree'];
+                                                                    entry['value'] = entry['certificate_tree'];
+                                                                    if (entry.certificate_tree == "All")
+                                                                        global_rpki = entry;
+                                                                });
+                                                                global_rpki['data'] = [];
+                                                                stats.forEach(function (entry) {
+                                                                    if (entry.certificate_tree != "All")
+                                                                        global_rpki['data'].push(entry);
+                                                                });
+                                                                $$("stats_tree_viewer").parse([global_rpki]);
+                                                            }
+                                                        })
+                                                    },
+                                                    on: {
+                                                        onAfterSelect: function (id) {
+                                                            var item = this.getItem(id);
+                                                            ["total", "valid", "invalid"].forEach(function (entry) {
+                                                                var chart = $$("stats_pie_chart_" + entry);
+                                                                chart.clearAll();
+                                                                chart.add({ id: entry + "total_cer", objects: item[entry + '_cer_objects'], label: "Resource Certificate" });
+                                                                chart.add({ id: entry + "total_mft", objects: item[entry + '_mft_objects'], label: "Manifest" });
+                                                                chart.add({ id: entry + "total_crl", objects: item[entry + '_crl_objects'], label: "CRL" });
+                                                                chart.add({ id: entry + "total_roa", objects: item[entry + '_roa_objects'], label: "ROA" });
+                                                            });
+                                                        }
+                                                    }
+                                                },
+                                                { view: "resizer" },
+                                                {
+                                                    view: "tabview", id: "stats_tabview", css: "browser_object_tabview",
+                                                    cells: [
+                                                        {
+                                                            header: "Total",
+                                                            body: {
+                                                                view: "chart", type: "pie", id: "stats_pie_chart_total", data: [], value: "#objects#", label: "#label#", pieInnerText: "#objects#",
+                                                                radius: 200
+                                                            }
+                                                        },
+                                                        {
+                                                            header: "Valid",
+                                                            body: {
+                                                                view: "chart", type: "pie", id: "stats_pie_chart_valid", data: [], value: "#objects#", label: "#label#", pieInnerText: "#objects#",
+                                                                radius: 200
+                                                            }
+                                                        },
+                                                        {
+                                                            header: "Invalid",
+                                                            body: {
+                                                                view: "chart", type: "pie", id: "stats_pie_chart_invalid", data: [], value: "#objects#", label: "#label#",
+                                                                radius: 200, pieInnerText: "#objects#"
+                                                            }
+                                                        },
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                    ]
+                }
+            ]
+        });
+        var window = webix.ui({
+            view: "window", id: "filter_window", move: true, hidden: true, height: "500",
+            head:
+            {
+                view: "toolbar",
+                cols: [
+                    { view: "label", label: "Filter Options" },
+                    { view: "button", label: "Close", align: 'right', width: 70, click: ("$$('filter_window').hide();") }
+                ]
+            },
+            body: {
+                view: "form",
+                elements: [
+                    { view: "template", template: "Choose filter attribute:", type: "header", css: "filter_form_header" },
+                    {
+                        "id": "filter_attribute_radio", view: "radio", label: "Attribute", height: "60", width: "400",
+                        options: [
+                            { "id": "filename", "value": "Filename" },
+                            { "id": "subject", "value": "Subject" },
+                            { "id": "issuer", "value": "Issuer" },
+                            { "id": "serial_nr", "value": "Serial Nr." },
+                            { "id": "resource", "value": "Resource" },
+                            { "id": "location", "value": "Location" }
+                        ]
+                    },
+                    { "id": "filter_value_text", view: "text", label: "Search for:", name: "search_for" },
+                    { view: "template", template: "Select file type:", type: "header", css: "filter_form_header" },
+                    {
+                        "id": "filter_filetype_radio", view: "radio", value: "all", height: "50", width: "400",
+                        options: [
+                            { "id": "all", "value": "All" },
+                            { "id": "cer", "value": ".cer" },
+                            { "id": "roa", "value": ".roa" }
+                        ]
+                    },
+                    { view: "template", template: "Select validation status:", type: "header", css: "filter_form_header" },
+                    {
+                        view: "layout",
+                        cols: [
+                            { view: "checkbox", id: 'filter_check_valid', label: "Valid", value: 1 },
+                            { view: "checkbox", id: 'filter_check_warnings', label: "Warnings", value: 1 },
+                            { view: "checkbox", id: 'filter_check_errors', label: "Errors", value: 1 }
+                        ]
+                    },
+                    {
+                        view: "button", value: "Apply Filter", click: function () {
+                            var filter_attribute = $$("filter_attribute_radio").getValue();
+                            filter_attribute = filter_attribute == null ? "None" : filter_attribute;
+                            var filter_value = $$("filter_value_text").getValue();
+                            filter_value = filter_attribute == null || filter_value == '' ? "None" : filter_value;
+                            var file_type = $$("filter_filetype_radio").getValue();
+                            var tree_name = $$("cert_tree_combo").getValue();
+                            console.log(tree_name);
+                            var payload = {
+                                "filter_attribute": filter_attribute, "filter_value": filter_value, "file_type": file_type, "tree_name": tree_name,
+                                "include_valids": $$('filter_check_valid').getValue(), "include_warnings": $$('filter_check_warnings').getValue(),
+                                "include_errors": $$('filter_check_errors').getValue()
+                            }
+
+                            webix.ajax().headers({ "Content-type": "application/json" }).post("/api/filter/", JSON.stringify(payload)).then(
+                                function (result) {
+                                    new_data = result.json();
+                                    console.log(new_data);
+                                    var tree = $$("f_tree_viewer");
+                                    tree.clearAll();
+                                    tree.parse(new_data);
+                                    $$("tree_viewer_layout").showBatch("filtered_tree_viewer");
+                                }
+                            );
+                        }
+                    },
+                    {
+                        view: "button", value: "Clear",
+                        click: function () {
+                            $$("tree_viewer_layout").showBatch("unfiltered_tree_viewer");
+                        }
+                    }
+                ]
+            }
+        });
+    </script>
+</body>
+
+</html>
