@@ -170,19 +170,16 @@
                                                             body:
                                                             {
                                                                 view: "layout", id: "certificate_layout", batch: "cer_batch",
-                                                                id: "parent_cert",
                                                                 rows: [{
-                                                                    responsive: "parent_cert",
-                                                                //    view: "flexlayout",
+                                                                    responsive: "certificate_layout",
                                                                     cols: [
                                                                         {
-                                                                            width: 500,
-                                                                            //view: "layout",
+                                                                            minWidth: 600,
                                                                             rows: [
                                                                                 { view: "template", template: "General Information", type: "header", css: "browser_object_properties_header" },
                                                                                 {
                                                                                     view: "property", id: "cer_properties", batch: "cer_batch", nameWidth: 200, editable: false,
-                                                                                    scroll:true,
+                                                                                    scroll: true,
                                                                                     elements: [
                                                                                         { label: "<span style='font-weight: bold'>Filename</span>", type: "text", id: "certificate_name" },
                                                                                         { label: "<span style='font-weight: bold'>Subject</span>", type: "text", id: "subject" },
@@ -206,8 +203,7 @@
                                                                             ]
                                                                         },
                                                                         {
-                                                                            //width: 500,
-                                                                            //view: "layout",
+                                                                            minWidth: 200,
                                                                             rows: [
                                                                                 { view: "template", template: "Resources", type: "header", css: "browser_object_properties_header" },
                                                                                 { view: "list", template: "#resource#", batch: "cer_batch", id: "cer_resource_list" }
@@ -222,39 +218,43 @@
                                                             body:
                                                             {
                                                                 view: "layout", id: "manifest_layout", batch: "cer_batch",
-                                                                cols: [
-                                                                    {
-                                                                        view: "layout",
-                                                                        rows: [
-                                                                            { view: "template", template: "General Information", type: "header", css: "browser_object_properties_header" },
-                                                                            {
-                                                                                view: "property", id: "mft_properties", batch: "cer_batch", nameWidth: 200, editable: false,
-                                                                                elements: [
-                                                                                    { label: "<span style='font-weight: bold'>Filename</span>", type: "text", id: "manifest_name" },
-                                                                                    { label: "<span style='font-weight: bold'>Location</span>", type: "text", id: "location" },
-                                                                                    { label: "<span style='font-weight: bold'>Validity Period Start</span>", type: "text", id: "validity_period_start" },
-                                                                                    { label: "<span style='font-weight: bold'>Validity Period End</span>", type: "text", id: "validity_period_end" },
-                                                                                    { label: "<span style='font-weight: bold'>Validation Status</span>", type: "text", id: "validation_status" },
-                                                                                    { label: "<span style='font-weight: bold'>Validation Errors</span>", type: "text", id: "validation_errors" },
-                                                                                    { label: "<span style='font-weight: bold'>Validation Warnings</span>", type: "text", id: "validation_warnings" },
-                                                                                ]
-                                                                            }
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        view: "layout",
-                                                                        rows: [
-                                                                            { view: "template", template: "Issued Files", type: "header", css: "browser_object_properties_header" },
-                                                                            {
-                                                                                view: "datatable", batch: "cer_batch", id: "manifest_table",
-                                                                                columns: [
-                                                                                    { id: "filename", header: "Filename", width: 150, fillspace: true },
-                                                                                    { id: "hash", header: "Hash", width: 250 }
-                                                                                ]
-                                                                            }
-                                                                        ]
-                                                                    }
-                                                                ]
+                                                                rows: [{
+                                                                    responsive: "manifest_layout",
+                                                                    cols: [
+                                                                        {
+                                                                            minWidth: 550,
+                                                                            rows: [
+                                                                                { view: "template", template: "General Information", type: "header", css: "browser_object_properties_header" },
+                                                                                {
+                                                                                    view: "property", id: "mft_properties", batch: "cer_batch", nameWidth: 200, editable: false,
+                                                                                    scroll: true,
+                                                                                    elements: [
+                                                                                        { label: "<span style='font-weight: bold'>Filename</span>", type: "text", id: "manifest_name" },
+                                                                                        { label: "<span style='font-weight: bold'>Location</span>", type: "text", id: "location" },
+                                                                                        { label: "<span style='font-weight: bold'>Validity Period Start</span>", type: "text", id: "validity_period_start" },
+                                                                                        { label: "<span style='font-weight: bold'>Validity Period End</span>", type: "text", id: "validity_period_end" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Status</span>", type: "text", id: "validation_status" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Errors</span>", type: "text", id: "validation_errors" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Warnings</span>", type: "text", id: "validation_warnings" },
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            minWidth: 550,
+                                                                            rows: [
+                                                                                { view: "template", template: "Issued Files", type: "header", css: "browser_object_properties_header" },
+                                                                                {
+                                                                                    view: "datatable", batch: "cer_batch", id: "manifest_table",
+                                                                                    columns: [
+                                                                                        { id: "filename", header: "Filename", width: 150, fillspace: true },
+                                                                                        { id: "hash", header: "Hash", width: 250, fillspace: true }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }]
                                                             }
                                                         },
                                                         {
@@ -262,37 +262,41 @@
                                                             body:
                                                             {
                                                                 view: "layout", id: "crl_layout", batch: "cer_batch",
-                                                                cols: [
-                                                                    {
-                                                                        view: "layout",
-                                                                        rows: [
-                                                                            { view: "template", template: "General Information", type: "header", css: "browser_object_properties_header" },
-                                                                            {
-                                                                                view: "property", id: "crl_properties", batch: "cer_batch", nameWidth: 200, editable: false,
-                                                                                elements: [
-                                                                                    { label: "<span style='font-weight: bold'>Filename</span>", type: "text", id: "crl_name" },
-                                                                                    { label: "<span style='font-weight: bold'>Location</span>", type: "text", id: "location" },
-                                                                                    { label: "<span style='font-weight: bold'>Validation Status</span>", type: "text", id: "validation_status" },
-                                                                                    { label: "<span style='font-weight: bold'>Validation Errors</span>", type: "text", id: "validation_errors" },
-                                                                                    { label: "<span style='font-weight: bold'>Validation Warnings</span>", type: "text", id: "validation_warnings" },
-                                                                                ]
-                                                                            },
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        view: "layout",
-                                                                        rows: [
-                                                                            { view: "template", template: "Revoked Files", type: "header", css: "browser_object_properties_header" },
-                                                                            {
-                                                                                view: "datatable", batch: "cer_batch", id: "crl_table",
-                                                                                columns: [
-                                                                                    { id: "serial_nr", header: "Serial Number", width: 100, fillspace: true },
-                                                                                    { id: "revoke_time", header: "Revocation Time", width: 200 }
-                                                                                ]
-                                                                            }
-                                                                        ]
-                                                                    }
-                                                                ]
+                                                                rows: [{
+                                                                    responsive: "crl_layout",
+                                                                    cols: [
+                                                                        {
+                                                                            minWidth: 450,
+                                                                            rows: [
+                                                                                { view: "template", template: "General Information", type: "header", css: "browser_object_properties_header" },
+                                                                                {
+                                                                                    view: "property", id: "crl_properties", batch: "cer_batch", nameWidth: 200, editable: false,
+                                                                                    scroll: true,
+                                                                                    elements: [
+                                                                                        { label: "<span style='font-weight: bold'>Filename</span>", type: "text", id: "crl_name" },
+                                                                                        { label: "<span style='font-weight: bold'>Location</span>", type: "text", id: "location" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Status</span>", type: "text", id: "validation_status" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Errors</span>", type: "text", id: "validation_errors" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Warnings</span>", type: "text", id: "validation_warnings" },
+                                                                                    ]
+                                                                                },
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            minWidth: 450,
+                                                                            rows: [
+                                                                                { view: "template", template: "Revoked Files", type: "header", css: "browser_object_properties_header" },
+                                                                                {
+                                                                                    view: "datatable", batch: "cer_batch", id: "crl_table",
+                                                                                    columns: [
+                                                                                        { id: "serial_nr", header: "Serial Number", width: 100, fillspace: true },
+                                                                                        { id: "revoke_time", header: "Revocation Time", width: 200, fillspace: true }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }]
                                                             }
                                                         }
                                                     ]
@@ -305,41 +309,45 @@
                                                             body:
                                                             {
                                                                 view: "layout", id: "roa_layout", batch: "roa_batch",
-                                                                cols: [
-                                                                    {
-                                                                        view: "layout",
-                                                                        rows: [
-                                                                            { view: "template", template: "General Information", type: "header", css: "browser_object_properties_header" },
-                                                                            {
-                                                                                view: "property", id: "roa_properties", batch: "roa_batch", nameWidth: 200, editable: false,
-                                                                                elements: [
-                                                                                    { label: "Filename", type: "text", id: "roa_name" },
-                                                                                    { label: "ASN", type: "int", id: "asn" },
-                                                                                    { label: "Signing Time", type: "text", id: "signing_time" },
-                                                                                    { label: "Location", type: "text", id: "location" },
-                                                                                    { label: "Validity Period Start", type: "text", id: "validity_period_start" },
-                                                                                    { label: "Validity Period End", type: "text", id: "validity_period_end" },
-                                                                                    { label: "Validation Status", type: "text", id: "validation_status" },
-                                                                                    { label: "Validation Errors", type: "text", id: "validation_errors" },
-                                                                                    { label: "Validation Warnings", type: "text", id: "validation_warnings" }
-                                                                                ]
-                                                                            }
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        view: "layout",
-                                                                        rows: [
-                                                                            { view: "template", template: "Prefixes", type: "header", css: "browser_object_properties_header" },
-                                                                            {
-                                                                                view: "datatable", batch: "roa_batch", id: "roa_table",
-                                                                                columns: [
-                                                                                    { id: "prefix", header: "Prefix", width: 200 },
-                                                                                    { id: "max_length", header: "Max. Length", width: 200 }
-                                                                                ]
-                                                                            }
-                                                                        ]
-                                                                    }
-                                                                ]
+                                                                rows: [{
+                                                                    responsive: "roa_layout",
+                                                                    cols: [
+                                                                        {
+                                                                            minWidth: 550,
+                                                                            rows: [
+                                                                                { view: "template", template: "General Information", type: "header", css: "browser_object_properties_header" },
+                                                                                {
+                                                                                    view: "property", id: "roa_properties", batch: "roa_batch", nameWidth: 200, editable: false,
+                                                                                    scroll: true,
+                                                                                    elements: [
+                                                                                        { label: "<span style='font-weight: bold'>Filename</span>", type: "text", id: "roa_name" },
+                                                                                        { label: "<span style='font-weight: bold'>ASN</span>", type: "int", id: "asn" },
+                                                                                        { label: "<span style='font-weight: bold'>Signing Time</span>", type: "text", id: "signing_time" },
+                                                                                        { label: "<span style='font-weight: bold'>Location</span>", type: "text", id: "location" },
+                                                                                        { label: "<span style='font-weight: bold'>Validity Period Start</span>", type: "text", id: "validity_period_start" },
+                                                                                        { label: "<span style='font-weight: bold'>Validity Period End</span>", type: "text", id: "validity_period_end" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Status</span>", type: "text", id: "validation_status" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Errors</span>", type: "text", id: "validation_errors" },
+                                                                                        { label: "<span style='font-weight: bold'>Validation Warnings</span>", type: "text", id: "validation_warnings" }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            minWidth: 300,
+                                                                            rows: [
+                                                                                { view: "template", template: "Prefixes", type: "header", css: "browser_object_properties_header" },
+                                                                                {
+                                                                                    view: "datatable", batch: "roa_batch", id: "roa_table",
+                                                                                    columns: [
+                                                                                        { id: "prefix", header: "Prefix", width: 200, fillspace: true },
+                                                                                        { id: "max_length", header: "Max. Length", width: 200, fillspace: true }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }]
                                                             }
                                                         },
                                                         {
@@ -347,37 +355,41 @@
                                                             body:
                                                             {
                                                                 view: "layout", id: "ee_certificate_layout", batch: "roa_batch",
-                                                                cols: [
-                                                                    {
-                                                                        view: "layout",
-                                                                        rows: [
-                                                                            { view: "template", template: "General Information", type: "header", css: "browser_object_properties_header" },
-                                                                            {
-                                                                                view: "property", id: "ee_cer_properties", batch: "roa_batch", nameWidth: 200, editable: false, fixedRowHeight: false,
-                                                                                elements: [
-                                                                                    { label: "Subject", type: "text", id: "subject" },
-                                                                                    { label: "Issuer", type: "text", id: "issuer" },
-                                                                                    { label: "Serial Nr.", type: "int", id: "serial_nr" },
-                                                                                    { label: "Subject Key Identifier", type: "text", id: "subject_key_identifier" },
-                                                                                    { label: "Authority Key Identifier", type: "text", id: "authority_key_identifier" },
-                                                                                    { label: "Public Key", type: "text", id: "public_key" },
-                                                                                    { label: "EE Certificate", type: "boolean", id: "isee" },
-                                                                                    { label: "CA Certificate", type: "boolean", id: "isca" },
-                                                                                    { label: "Root Certificate", type: "boolean", id: "isroot" },
-                                                                                    { label: "Validity Period Start", type: "text", id: "validity_period_start" },
-                                                                                    { label: "Validity Period End", type: "text", id: "validity_period_end" },
-                                                                                ]
-                                                                            },
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        view: "layout",
-                                                                        rows: [
-                                                                            { view: "template", template: "Resources", type: "header", css: "browser_object_properties_header" },
-                                                                            { view: "list", template: "#resource#", batch: "roa_batch", id: "ee_cer_resource_list" }
-                                                                        ]
-                                                                    }
-                                                                ]
+                                                                rows: [{
+                                                                    responsive: "ee_certificate_layout",
+                                                                    cols: [
+                                                                        {
+                                                                            minWidth: 600,
+                                                                            rows: [
+                                                                                { view: "template", template: "General Information", type: "header", css: "browser_object_properties_header" },
+                                                                                {
+                                                                                    view: "property", id: "ee_cer_properties", batch: "roa_batch", nameWidth: 200, editable: false, fixedRowHeight: false,
+                                                                                    scroll: true,
+                                                                                    elements: [
+                                                                                        { label: "<span style='font-weight: bold'>Subject</span>", type: "text", id: "subject" },
+                                                                                        { label: "<span style='font-weight: bold'>Issuer</span>", type: "text", id: "issuer" },
+                                                                                        { label: "<span style='font-weight: bold'>Serial Nr.</span>", type: "int", id: "serial_nr" },
+                                                                                        { label: "<span style='font-weight: bold'>Subject Key Identifier</span>", type: "text", id: "subject_key_identifier" },
+                                                                                        { label: "<span style='font-weight: bold'>Authority Key Identifier</span>", type: "text", id: "authority_key_identifier" },
+                                                                                        { label: "<span style='font-weight: bold'>Public Key</span>", type: "text", id: "public_key" },
+                                                                                        { label: "<span style='font-weight: bold'>EE Certificate</span>", type: "boolean", id: "isee" },
+                                                                                        { label: "<span style='font-weight: bold'>CA Certificate</span>", type: "boolean", id: "isca" },
+                                                                                        { label: "<span style='font-weight: bold'>Root Certificate</span>", type: "boolean", id: "isroot" },
+                                                                                        { label: "<span style='font-weight: bold'>Validity Period Start</span>", type: "text", id: "validity_period_start" },
+                                                                                        { label: "<span style='font-weight: bold'>Validity Period End</span>", type: "text", id: "validity_period_end" },
+                                                                                    ]
+                                                                                },
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            minWidth: 200,
+                                                                            rows: [
+                                                                                { view: "template", template: "Resources", type: "header", css: "browser_object_properties_header" },
+                                                                                { view: "list", template: "#resource#", batch: "roa_batch", id: "ee_cer_resource_list" }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }]
                                                             }
                                                         }
                                                     ]
