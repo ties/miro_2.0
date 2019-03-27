@@ -146,6 +146,7 @@
 
 .webix_property_value {
 	white-space: normal;
+	word-wrap: break-word;
 }
 
 .webix_property_label, .webix_property_value {
